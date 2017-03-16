@@ -1,0 +1,10 @@
+cong_state1_car,53 Car,00:00:00,00:06:00
+cong_state2_car,53 Car,00:06:00,00:06:00
+cong_state3_car,53 Car,00:12:00,00:08:00
+cong_state4_car,53 Car,00:20:00,00:10:00
+cong_state5_car,53 Car,00:30:00,00:10:00
+cong_state1_truck,56 truck,00:00:00,00:06:00
+cong_state2_truck,56 truck,00:06:00,00:06:00
+cong_state3_truck,56 truck,00:12:00,00:08:00
+cong_state4_truck,56 truck,00:20:00,00:10:00
+cong_state5_truck,56 truck,00:30:00,00:10:00

@@ -1,0 +1,13 @@
+config_id:configI80
+sensor;id:RADAREB4;type:radar;section:37742;distance:5.24;flow_std_specs:0.3;speed_std_specs:1.5;aggregation_sec:30
+sensor;id:RTMSEB5;type:rtms;section:15814;distance:771.13;flow_std_specs:0.15;speed_std_specs:5.0;aggregation_sec:30
+sensor;id:RADAREB6;type:radar;section:15814;distance:1371.13;flow_std_specs:0.3;speed_std_specs:1.5;aggregation_sec:30
+sensor;id:RTMSEB7;type:rtms;section:15589;distance:945.08;flow_std_specs:0.15;speed_std_specs:5.0;aggregation_sec:30
+sensor;id:RADAREB8;type:radar;section:3412;distance:534.97;flow_std_specs:0.3;speed_std_specs:1.5;aggregation_sec:30
+sensor;id:RTMSEB9;type:rtms;section:3412;distance:1534.97;flow_std_specs:0.15;speed_std_specs:5.0;aggregation_sec:30
+sensor;id:RADAREB10;type:radar;section:3412;distance:2134.97;flow_std_specs:0.3;speed_std_specs:1.5;aggregation_sec:30
+sensor;id:RADAREB11;type:radar;section:3412;distance:2934.97;flow_std_specs:0.3;speed_std_specs:1.5;aggregation_sec:30
+sensor;id:RTMSEB12;type:rtms;section:3401;distance:34.5;flow_std_specs:0.15;speed_std_specs:5.0;aggregation_sec:30
+sensor;id:RADAREB14;type:radar;section:40842;distance:498.75;flow_std_specs:0.3;speed_std_specs:1.5;aggregation_sec:30
+algorithm;id:enkfANupdated;type:enkf_AN;queue_threshold:17.88;num_ensembles:200;vm:27.19;beta:0.6214;rhoc:0.0439;wc:-4.15;std_cell:0.01;std_oncell:0.015;std_offcell:0.012;std_qin:0.1;std_qout:0.2;init_rho:0;init_qin:0.5;init_qout:0.0
+

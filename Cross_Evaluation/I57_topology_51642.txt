@@ -1,0 +1,14 @@
+# this file saves the work zone topology information
+# all length are in meters
+loc_start_end:353.1,6753.1
+time_start_dur_step:55800,9000,0.2
+fwy_sec_order:51413,51427,51426,879,414,876,473
+replications:51642
+sec_id:51413;length:6939.5
+sec_id:51427;length:13.6;upstream:51413;downstream:51426
+sec_id:51426;length:303.14
+sec_id:879;length:4.51;upstream:51426;downstream:414
+sec_id:414;length:987.12
+sec_id:519;length:804.41
+sec_id:876;length:112.15;upstream:414,519;downstream:473
+sec_id:473;length:620.0

@@ -1,0 +1,49 @@
+DIMENSION      6              # number of variables
+
+BB_EXE         I00_6dim_with_con.exe         # 'bb.exe' is a program that
+BB_INPUT_TYPE	(I I I I I I)
+BB_OUTPUT_TYPE OBJ EB           # takes in argument the name of
+                              # a text file containing 5
+                              # values, and that displays 3
+                              # values that correspond to the
+                              # objective function value (OBJ),
+                              # and two constraints values g1
+                              # and g2 with g1 <= 0 and
+                              # g2 <= 0; 'PB' and 'EB'
+                              # correspond to constraints that
+                              # are treated by the Progressive
+                              # and Extreme Barrier approaches
+                              # (all constraint-handling
+                              #  options are described in the
+                              #  detailed parameters list)
+
+X0             (105 70 60 60 2 2 )  # starting point
+
+LOWER_BOUND    (105 60 50 50 1 1)       # lower bound for variables
+UPPER_BOUND    (130 180 150 150 7 7)     # upper bound for variables
+
+LH_SEARCH	20 200
+
+MAX_BB_EVAL    4000            # the algorithm terminates when
+                              # 100 black-box evaluations have
+                              # been made
+
+VNS_SEARCH 0.99  	# variable neighborhood search
+# MIN_MESH_SIZE  1
+							  
+TMP_DIR        E:\\workzone_tmp         # indicates a directory where
+                              # temporary files are put
+                              # (increases performance by ~100%
+                              # if you're working on a network
+                              # account and if TMP_DIR is on a
+                              # local disk)
+
+# F_TARGET 0			# terminate if objective <= F_TARGET
+DISPLAY_DEGREE 2 
+DISPLAY_ALL_EVAL yes
+
+
+DISPLAY_STATS BBE ( SOL ) OBJ # Display the number of evaluation (BBE),
+				# the current solution ( SOL ) and the objective
+
+# STATS_FILE test.txt BBE ( SOL ) OBJ

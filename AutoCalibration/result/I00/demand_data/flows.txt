@@ -1,0 +1,10 @@
+cong_state1_car,329,2200
+cong_state2_car,329,2200
+cong_state3_car,329,1200
+cong_state4_car,329,1000
+cong_state5_car,329,1000
+cong_state1_truck,329,880
+cong_state2_truck,329,880
+cong_state3_truck,329,480
+cong_state4_truck,329,400
+cong_state5_truck,329,400

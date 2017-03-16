@@ -1,0 +1,10 @@
+# this file saves the work zone topology information
+# unit is in meters
+# Only nodes have upstream and downstream entries
+loc_start_end:0,1600
+time_start_dur_step:0,7200,0.2
+replications:1064
+fwy_sec_order:701,457,456
+sec_id:701;length:1629.71
+sec_id:457;length:2.44;upstream:701;downstream:456
+sec_id:456;length:111.54

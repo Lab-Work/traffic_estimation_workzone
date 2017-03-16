@@ -1,0 +1,11 @@
+config_id:configI57
+sensor;id:RADARSB1;type:radar;section:51413;distance:353.1;flow_std_specs:0.3;speed_std_specs:5.0;aggregation_sec:30
+sensor;id:RADARSB2;type:radar;section:51413;distance:1153.1;flow_std_specs:0.3;speed_std_specs:5.0;aggregation_sec:30
+sensor;id:RADARSB3;type:radar;section:51413;distance:1953.1;flow_std_specs:0.3;speed_std_specs:5.0;aggregation_sec:30
+sensor;id:RADARSB4;type:radar;section:51413;distance:2753.1;flow_std_specs:0.3;speed_std_specs:5.0;aggregation_sec:30
+sensor;id:RADARSB5;type:radar;section:51413;distance:3553.1;flow_std_specs:0.3;speed_std_specs:5.0;aggregation_sec:30
+sensor;id:RADARSB6;type:radar;section:51413;distance:4353.1;flow_std_specs:0.3;speed_std_specs:5.0;aggregation_sec:30
+sensor;id:RTMSSB7;type:rtms;section:51413;distance:5153.1;flow_std_specs:0.2;speed_std_specs:5.0;aggregation_sec:30
+sensor;id:RADARSB8;type:radar;section:51413;distance:5953.1;flow_std_specs:0.3;speed_std_specs:5.0;aggregation_sec:30
+sensor;id:RADARSB9;type:radar;section:51413;distance:6753.1;flow_std_specs:0.3;speed_std_specs:5.0;aggregation_sec:30
+algorithm;id:enkfANupdated;type:enkf_AN;queue_threshold:17.88;num_ensembles:200;vm:23.56;beta:0.6214;rhoc:0.0578;wc:-4.88;std_cell:0.01;std_oncell:0.015;std_offcell:0.012;std_qin:0.1;std_qout:0.2;init_rho:0;init_qin:0.5;init_qout:0.0
