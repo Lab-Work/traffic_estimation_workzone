@@ -20,13 +20,13 @@ __author__ = 'Yanning Li'
 
 def main(argv):
 
-    # =================================================
+    # =============================================================================================================
     # Read and parse the configuration file for this work zone and thread
     workzone = argv[1]
     thread = argv[2]
     config = parse_config(workzone, thread)
 
-    # =================================================
+    # =============================================================================================================
     # a timeout flag. If not paras or solution paras are obtained in 60 s. Then stop AIMSUN.
     timeout_flag = False
     timeout_counter = 0
@@ -34,133 +34,123 @@ def main(argv):
     solved_flag = False
 
     # keep track of the current best parameter and its associated objective
-    default_paras = load_paras('../data/I80/default_paras.txt')
+    default_paras = load_paras('../data/{0}/default_paras.txt'.format(workzone))
+    default_obj = -1.0
     best_para = deepcopy(default_paras)
-    best_obj = 0
+    best_obj = np.inf
 
     # keep track of start time:
     start_time = datetime.now()
 
     # Start the cmd output logger
-    start_cmd_logger(config['logger_path'], start_time)
-    start_opt_logger(config['logger_path'], start_time)
+    cmd = CmdLogger(config['logger_path'], start_time)
+    opt = Opt(config['logger_path'], start_time)
+    aimsun = AimsunApi(cmd)
 
     # print python version
     # print '\nPython interpreter version: {0} \n'.format(sys.version)
 
-    print_cmd('\n\n========================================================================')
-    print_cmd('=========================AIMSUN Autocalibration=========================')
-    print_cmd('=============================== Thread 1 ===============================')
-    print_cmd('Auto calibration started at {0}\n'.format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+    cmd.print_cmd('\n\n========================================================================')
+    cmd.print_cmd('=========================AIMSUN Autocalibration=========================')
+    cmd.print_cmd('=============================== Thread 1 ===============================')
+    cmd.print_cmd('Auto calibration started at {0}\n'.format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
 
     # write notes and parameters to cmd_log
-    cmd_logger_header('AIMSUN calibration for {0} {1}'.format(workzone, thread),
+    cmd.cmd_logger_header('AIMSUN calibration for {0} {1}'.format(workzone, thread),
                       config['g_max_iter'], config['g_num_rep'], config['seed_list'],
                       config['obj_fun'], config['det_used'],
                       config['main_entrance_id'], config['main_entrance_discount'],
                       [('default', default_paras)])
 
-    #========================================================
+    # =============================================================================================================
     # validation data for computing the objective
     # ----read from file
-    valid_data = read_validation_data(config['start_time_str'], config['end_time_str'],
+    valid_data = aimsun.read_validation_data(config['start_time_str'], config['end_time_str'],
                                       config['det_used'], config['validFilePath'])
 
     # save the complete validation data used for visualization
-    all_valid_data = read_validation_data(config['start_time_str'], config['end_time_str'],
+    all_valid_data = aimsun.read_validation_data(config['start_time_str'], config['end_time_str'],
                                           config['all_det_strs'], config['validFilePath'])
-    save_solution_data(None, all_valid_data, config['logger_path'], start_time, 'valid')
+    opt.save_solution_data(None, all_valid_data, config['logger_path'], start_time, 'valid')
 
-
-    #========================================================
+    # =============================================================================================================
     # load previous solution
     if config['opt_step_file'] is not None:
-        solution_list = load_previous_opt_solutions(config['opt_step_file'])
-        print_cmd('\nLoaded previous OptQuest solutions:\n---- {0}'.format(config['opt_step_file']))
+        solution_list = opt.load_previous_opt_solutions(config['opt_step_file'])
+        cmd.print_cmd('\nLoaded previous OptQuest solutions:\n---- {0}'.format(config['opt_step_file']))
 
         # get the current best parameters
-        previous_obj_tuple = np.array( solution_list[1] )
-        previous_obj_val = config['obj_fun'][0]*previous_obj_tuple[:,0] + config['obj_fun'][1]*previous_obj_tuple[:,1]
-
-        idx = np.argmin( previous_obj_val )
+        idx = np.argmin( np.array( solution_list[1] ) )
 
         best_para = deepcopy(solution_list[0][idx])
         best_obj = deepcopy(solution_list[1][idx])
 
-        print_cmd('\nBest obj from loaded parameters: {0}\n'.format( config['obj_fun'][0]*best_obj[0] +
-                                                                   config['obj_fun'][1]*best_obj[1] ))
-
+        cmd.print_cmd('\nBest obj from loaded parameters: {0}\n'.format(best_obj))
     else:
         solution_list = None
 
-
-    #========================================================
+    # =============================================================================================================
     # start AIMSUN simulation
     if (len(argv) < 2):
-        print_cmd('Usage: aconsole.exe -script SCRIPT ANG_FILE')
+        cmd.print_cmd('Usage: aconsole.exe -script SCRIPT ANG_FILE')
         return -1
     else:
         # Start the Aimsun console
         console = ANGConsole()
         if console.open(argv[1]):
 
-            print_cmd('\nAimsun opening {0} ...\n'.format(argv[1]))
+            cmd.print_cmd('\nAimsun opening {0} ...\n'.format(argv[1]))
 
-            #========================================================
+            # ==========================================================================================================
             # Set up AIMSUN simulation
-            #========================================================
+            # ==========================================================================================================
             # Get the current Aimsun  model
             model = GKSystem.getSystem().getActiveModel()
+            aimsun.set_model(model)
+            demand = aimsun.load_demand_from_ang('congflow_demand') # the demand has been previously loaded to aimsun
 
-            demand = load_demand_from_ang(model, 'congflow_demand')
-
-            # Setup model
             # create scenario
             # if exists, then just load
-            scenario = setup_scenario(model, config['traffic_state'], demand)
+            scenario = aimsun.setup_scenario(config['traffic_state'], demand)
 
             # create experiment
-            experiment = setup_experiment(model, config['traffic_state'] + '_exp', scenario)
+            experiment = aimsun.setup_experiment(config['traffic_state'] + '_exp', scenario)
 
             # create replications
-            avg_result = setup_replication(model, experiment, config['g_num_rep'], config['seed_list'])
+            avg_result = aimsun.setup_replication(experiment, config['g_num_rep'], config['seed_list'])
 
             # create simulator
-            simulator = create_simulator(model)
+            simulator = aimsun.create_simulator()
             # plugin is a module which can compute the average for the GKExperimentResult object
             plugin = GKSystem.getSystem().getPlugin( "GGetram" )
 
-            #========================================================
+            # ==========================================================================================================
             # generate the result using default values
-            #========================================================
+            # ==========================================================================================================
             if config['simulate_default'] is True:
 
-                set_new_paras(model, experiment, default_paras)
-                # test
-                console.save("thread1_calib_I80_EB_default.ang")
-                print_cmd('\nthread1_calib_I80_EB_default.ang saved.')
+                aimsun.set_new_paras(experiment, default_paras)
+                console.save("{0}_calib_{1}_EB_default.ang".format(thread, workzone))
+                cmd.print_cmd('\n{0}_calib_{1}_EB_default.ang saved.'.format(thread, workzone))
 
-                default_result = simulate_rep_from_paras(model, experiment, default_paras,
+                default_result = aimsun.simulate_rep_from_paras(experiment, default_paras,
                                                          simulator, avg_result, plugin,
-                                                         valid_data, config['det_used_weight'],
-                                                         'default')
+                                                         valid_data, config['det_used_weight'], 'default')
 
-                save_solution_data(default_paras, default_result[1], config['logger_path'], start_time, 'default')
+                opt.save_solution_data(default_paras, default_result[1], config['logger_path'], start_time, 'default')
 
                 # --------------------------------------------------
                 # For printing result
                 # compute the objective function value if using the true parameters
-                # true_obj_value = valid_result[0]
-                default_obj_val = default_result[0]
-
-                best_obj = deepcopy(default_obj_val)
+                default_obj = default_result[0][0]
+                best_obj = default_obj
 
             else:
-                default_obj_val = (-1, -1)
+                default_obj = -1.0
 
-            #========================================================
+            # ==========================================================================================================
             # Iterating parameters
-            #========================================================
+            # ==========================================================================================================
             opt_solution = []
 
             iter_counter = 1
@@ -171,22 +161,21 @@ def main(argv):
                 run_time = datetime.now() - start_time
                 expected_finish_time = datetime.now() + run_time*(config['g_max_iter'] + 3 - iter_counter)/simulated_iter_counter
 
-                print_cmd('\n-----------T1-------Iteration {0}------------------------'.format(iter_counter))
-
                 # print out run time information
-                print_cmd('Started simulation at: {0}'.format(start_time.strftime("%Y-%m-%d %H:%M:%S")))
-                print_cmd('Simulation run time  : {0}'.format(str(run_time)))
-                print_cmd('Expected to finish at: {0}\n'.format(expected_finish_time.strftime("%Y-%m-%d %H:%M:%S")))
+                cmd.print_cmd('\n-----------{1}-------Iteration {0}------------------------'.format(iter_counter), thread)
+                cmd.print_cmd('Started simulation at: {0}'.format(start_time.strftime("%Y-%m-%d %H:%M:%S")))
+                cmd.print_cmd('Simulation run time  : {0}'.format(str(run_time)))
+                cmd.print_cmd('Expected to finish at: {0}\n'.format(expected_finish_time.strftime("%Y-%m-%d %H:%M:%S")))
 
-                #==================================================
+                # ======================================================================================================
                 # Read parameters
-                #==================================================
-                paras = read_optquest_solution(config['sim_sol_file'])
+                # ======================================================================================================
+                paras = opt.read_opt_solution(config['sim_sol_file'], cmd)
 
                 if paras is None:
                     # solution not found; keep going
                     # read initial/new parameters from OptQuest
-                    paras = read_optquest_paras(config['sim_para_file'])
+                    paras = opt.read_opt_paras(config['sim_para_file'], cmd)
 
                     # if paras is still None, then probably a solution has been written
                     if paras is None:
@@ -205,153 +194,144 @@ def main(argv):
 
                 else:
                     # mark as solved
-                    print_cmd('\n------------------Optimal solution----------------------'.format(iter_counter))
+                    cmd.print_cmd('\n------------------Optimal solution----------------------'.format(iter_counter))
                     solved_flag = True
 
-
-                #==================================================
+                # ======================================================================================================
                 # Simulate and get the objective function value
-                #==================================================
+                # ======================================================================================================
                 # first check previous solutions
-                tmp_obj_val = try_get_obj_from_previous_solutions(solution_list,paras)
+                tmp_obj_val = opt.try_get_obj_from_previous_solutions(solution_list, paras)
 
                 if tmp_obj_val is None:
-
                     # set the default parameters, and then overwrite. The reason is the new paras may not be
                     # complete, hence need to make sure the other paras are in default.
                     # the true parameters are the default.
-                    print_cmd('Reset default paras:')
-                    set_new_paras(model, experiment, default_paras)
+                    cmd.print_cmd('Reset default paras:')
+                    aimsun.set_new_paras(experiment, default_paras)
                     # overwrite a subset of the parameters from paras
-                    print_cmd('Overwrite paras:')
-                    set_new_paras(model, experiment, paras)
+                    cmd.print_cmd('Overwrite paras:')
+                    aimsun.set_new_paras(experiment, paras)
 
                     # no solution, then simulate
-                    result = simulate_rep_from_paras(model, experiment, paras,
+                    result = aimsun.simulate_rep_from_paras(experiment, paras,
                                                          simulator, avg_result, plugin,
                                                          valid_data, config['det_used_weight'],
                                                          'iteration {0}'.format(iter_counter))
 
-                    # evaluate the objective function value
-                    obj_value = result[0]
+                    # evaluate the average objective function value
+                    obj_value = result[0][0]
 
-                    # truly simulated number
+                    # number of simulations
                     simulated_iter_counter += 1
 
-                    # console.save("test_I80_EB_middle.ang")
-                    # print_cmd('\ntest_I80_EB_middle.ang saved.')
-
                 else:
-                    # [RMS_speed, RMS_count]; just follow the tradition, though we are not using count
                     obj_value = tmp_obj_val
-                    print_cmd('Got obj value {0} from previous solutions'.format(tmp_obj_val))
+                    cmd.print_cmd('Got obj value {0} from previous solutions'.format(tmp_obj_val))
 
-                #==================================================
-                # send simulation value to OptQuest
-                #==================================================
-                write_simval(config['obj_fun'][0]*obj_value[0] + config['obj_fun'][1]*obj_value[1], config['sim_val_file'])
+                # ======================================================================================================
+                # send simulation value to Optimizor
+                # ======================================================================================================
+                opt.write_simval(obj_value, config['sim_val_file'], cmd)
 
-                #==================================================
+                # ======================================================================================================
                 # update the current best value
-                #==================================================
-                if config['obj_fun'][0]*obj_value[0] + config['obj_fun'][1]*obj_value[1] <= \
-                    config['obj_fun'][0]*best_obj[0] + config['obj_fun'][1]*best_obj[1] :
+                # ======================================================================================================
+                if obj_value <= best_obj:
                     # found better parameters
                     best_para = deepcopy(paras)
                     best_obj = deepcopy(obj_value)
 
-                #==================================================
+                # ======================================================================================================
                 # Log the result
-                #==================================================
-                log_opt_step(opt_solution, iter_counter, paras, obj_value)
+                # ======================================================================================================
+                opt.log_opt_step(opt_solution, iter_counter, paras, obj_value)
 
-                print_opt_steps(opt_solution, config['obj_fun'], [('default', default_obj_val)])
+                cmd.print_opt_steps(opt_solution, default_obj)
 
                 iter_counter += 1
 
             # while loop ends here
-            #========================================================
-
+            # ==========================================================================================================
             # save logger to file
-            stop_opt_log()
+            opt.stop()
 
+            # ==========================================================================================================
             # save the optimal simulation result:
             if solved_flag is True:
                 optimal_paras = paras
 
-                set_new_paras(model, experiment, optimal_paras)
+                aimsun.set_new_paras(experiment, optimal_paras)
                 # save the ang file
-                console.save("thread1_calib_I80_EB_optimal.ang")
-                print_cmd('\nthread1_calib_I80_EB_optimal.ang saved.')
+                console.save("{0}_calib_{1}_EB_optimal.ang".format(thread, workzone))
+                cmd.print_cmd('\n{0}_calib_{1}_EB_optimal.ang saved.'.format(thread, workzone))
 
                 # re-simulate, in case no data available
-                result = simulate_rep_from_paras(model, experiment, optimal_paras,
+                result = aimsun.simulate_rep_from_paras(experiment, optimal_paras,
                                                          simulator, avg_result, plugin,
                                                          valid_data, config['det_used_weight'],
                                                          'iteration Optimal')
 
-                optimal_obj_val = result[0]
+                optimal_obj = result[0][0]
                 optimal_data = result[1]
-                save_solution_data(optimal_paras, optimal_data, config['logger_path'], start_time, 'optimal')
+                opt.save_solution_data(optimal_paras, optimal_data, config['logger_path'], start_time, 'optimal')
 
-                #========================================================
+                # ======================================================================================================
                 # see how the seed affects the optimal solution
                 if config['simulate_newseed'] is True:
-                    set_random_seed(avg_result)
-                    newseed_result = simulate_rep_from_paras(model, experiment, optimal_paras,
+                    aimsun.set_random_seed(avg_result)
+                    newseed_result = aimsun.simulate_rep_from_paras(experiment, optimal_paras,
                                                              simulator, avg_result, plugin,
                                                              valid_data, config['det_used_weight'],
                                                              'newseed')
-                    save_solution_data(optimal_paras, newseed_result[1], config['logger_path'], start_time, 'newseed')
-                    newseed_obj_val = newseed_result[0]
+                    opt.save_solution_data(optimal_paras, newseed_result[1], config['logger_path'], start_time, 'newseed')
+                    newseed_obj = newseed_result[0][0]
                 else:
-                    newseed_obj_val = (-1, -1)
+                    newseed_obj = -1.0
 
             end_time = datetime.now()
 
-
+            # ==========================================================================================================
             # if timeout, then print out the optimal parameter so far
             if timeout_flag is True:
-                set_random_seed(avg_result)
-                newseed_result = simulate_rep_from_paras(model, experiment, best_para,
+                aimsun.set_random_seed(avg_result)
+                newseed_result = aimsun.simulate_rep_from_paras(experiment, best_para,
                                                              simulator, avg_result, plugin,
                                                              valid_data, config['det_used_weight'],
                                                              'newseed')
-                save_solution_data(best_para, newseed_result[1], config['logger_path'], start_time, 'newseed')
-                newseed_obj_val = newseed_result[0]
+                opt.save_solution_data(best_para, newseed_result[1], config['logger_path'], start_time, 'newseed')
+                newseed_obj = newseed_result[0][0]
 
-                print_cmd(  '\n\n==================== Calibration timeout ===================================')
-                print_cmd(  '===========================================================================')
+                cmd.print_cmd(  '\n\n==================== Calibration timeout ===================================')
+                cmd.print_cmd(  '===========================================================================')
 
-                print_results([ ('default', default_paras),
+                cmd.print_results([ ('default', default_paras),
                                 ('optimal', best_para),
                                 ('newseed', best_para)],
-                              [ ('default', default_obj_val),
+                              [ ('default', default_obj),
                                 ('optimal', best_obj),
-                                ('newseed', newseed_obj_val)])
+                                ('newseed', newseed_obj)])
 
             if solved_flag is True:
 
-                print_results([ ('optimal', optimal_paras),
+                cmd.print_results([ ('optimal', optimal_paras),
                                 ('default', default_paras)],
-                              [ ('optimal',optimal_obj_val),
-                                ('default', default_obj_val),
-                                ('newseed', newseed_obj_val)])
+                              [ ('optimal',optimal_obj),
+                                ('default', default_obj),
+                                ('newseed', newseed_obj)])
             else:
+                cmd.print_cmd(  '\n\n====================Calibration timeout===================================')
+                cmd.print_cmd(  '===========================================================================')
 
-                print_cmd(  '\n\n====================Calibration timeout===================================')
-                print_cmd(  '===========================================================================')
+            cmd.print_cmd(  '\nCalibration started at:    {0}'.format(start_time.strftime("%Y-%m-%d %H:%M:%S")))
+            cmd.print_cmd(  '              ended at:      {0}'.format(end_time.strftime("%Y-%m-%d %H:%M:%S")))
+            cmd.print_cmd(  '         took in total:      {0}'.format(str(end_time - start_time)))
+            cmd.print_cmd(  '===========================================================================')
 
-            print_cmd(  '\nCalibration started at:    {0}'.format(start_time.strftime("%Y-%m-%d %H:%M:%S")))
-            print_cmd(  '              ended at:      {0}'.format(end_time.strftime("%Y-%m-%d %H:%M:%S")))
-            print_cmd(  '         took in total:      {0}'.format(str(end_time - start_time)))
-            print_cmd(  '===========================================================================')
-
-
-            print_cmd(  '\nAimsun is now closing...\n')
+            cmd.print_cmd(  '\nAimsun is now closing...\n')
 
             # stop logger and save into file
-            stop_cmd_logger()
+            cmd.stop()
 
             console.close()
 

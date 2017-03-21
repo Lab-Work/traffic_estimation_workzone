@@ -10,7 +10,6 @@ from os.path import exists
 SITEPACKAGES = "C:\\Python27\\Lib\\site-packages"
 sys.path.append(SITEPACKAGES)
 import numpy as np
-import matplotlib.pyplot as plt
 
 from PyANGBasic import *
 from PyANGKernel import *
@@ -22,23 +21,34 @@ __author__ = 'Yanning Li, Juan Carlos Martinez Mori'
 This script contains functions requried to automate AIMSUN.
 """
 
+
 # ====================================================================================================
 # Uncomment the following are just to remove the error messages
 
 # def QString():
 #     pass
+#
+#
 # def QVariant():
 #     pass
+#
+#
 # def GKScheduleDemandItem():
 #     pass
+#
+#
 # GKTimeDuration = None
 # GKVehicle = None
 # GKSystem = None
 # GKSection = None
 # GKExperiment = None
 # GKVehicleReactionTimes = None
+#
+#
 # def GAimsunSimulator():
 #     pass
+#
+#
 # GKSimulationTask = None
 # GKReplication = None
 # GGetramModule = None
@@ -47,7 +57,7 @@ This script contains functions requried to automate AIMSUN.
 # GKColumnIds = None
 # Qt = None
 # QTime = None
-
+# GKGenericExperiment = None
 
 # ====================================================================================================
 # Define the columns for the files to be read
@@ -76,15 +86,15 @@ class AimsunApi:
     """
     This class contains the methods that directly interact with AIMSUN
     """
-    def __init__(self, cmd_logger, model):
+
+    def __init__(self, cmd_logger):
         """
         Initialize the api with the command window logger
         :param cmd_logger: logger for porting cmd output to text file
-        :param model: the aimsun GK model
         :return: an object
         """
         self.cmd_logger = cmd_logger
-        self.model = model
+        self.model = None
 
     # ====================================================================================================
     # --------------------------- Functions for reading demand or data from files ------------------------
@@ -127,19 +137,20 @@ class AimsunApi:
 
         for state_name in pars_dict.keys():
             state = self.__createState(state_name, pars_dict, flows_dict, turns_dict, main_entrance_id,
-                                  main_entrance_discount_ratio)
+                                       main_entrance_discount_ratio)
 
             if _debug:
                 self.cmd_logger.print_cmd(
                     'state from {0}, duration:{1}\n'.format(state.getFrom().toString(), state.getDuration().toString()))
 
-                self.cmd_logger.print_cmd('state entrance flow {0}'.format(state.getEntranceFlow(model.getCatalog().find(int(330)), None)))
+                self.cmd_logger.print_cmd(
+                    'state entrance flow {0}'.format(state.getEntranceFlow(self.model.getCatalog().find(int(330)), None)))
 
                 self.cmd_logger.print_cmd('state turn 330->(340, 341): ({0},{1})'.format(
-                    state.getTurningPercentage(model.getCatalog().find(int(330)),
-                                               model.getCatalog().find(int(340)), None),
-                    state.getTurningPercentage(model.getCatalog().find(int(330)),
-                                               model.getCatalog().find(int(341)), None)))
+                    state.getTurningPercentage(self.model.getCatalog().find(int(330)),
+                                               self.model.getCatalog().find(int(340)), None),
+                    state.getTurningPercentage(self.model.getCatalog().find(int(330)),
+                                               self.model.getCatalog().find(int(341)), None)))
 
             schedule = self.__createScheduleItem(state)
 
@@ -238,6 +249,14 @@ class AimsunApi:
         return dict_valid
 
     # ---------------------- Functions for setting up the simulation in AIMSUN ------------------------
+    def set_model(self, model):
+        """
+        This function sets the aimsun GK Model
+        :param model: GK Model
+        :return: set in property
+        """
+        self.model = model
+
     def setup_scenario(self, scenario_name, demand):
         """
         Set up the scenario and connect scenario with demand
@@ -251,7 +270,8 @@ class AimsunApi:
         if scenario is None or not scenario.isA(QString("GKScenario")):
             scenario = GKSystem.getSystem().newObject("GKScenario", self.model, -1, True)
             scenario.setName(QString(scenario_name))
-            self.cmd_logger.print_cmd('Error: no traffic scenario named {0}. Creating new one...\n'.format(scenario_name))
+            self.cmd_logger.print_cmd(
+                'Error: no traffic scenario named {0}. Creating new one...\n'.format(scenario_name))
 
         scenario.setDemand(demand)
 
@@ -284,7 +304,8 @@ class AimsunApi:
         experiment = self.model.getCatalog().findByName(QString(experiment_name))
         if experiment is None or not experiment.isA(QString("GKExperiment")):
             experiment = GKSystem.getSystem().newObject("GKExperiment", self.model, -1, True)
-            self.cmd_logger.print_cmd('ERROR: No traffic experiment named {0}. Creating a new one...\n'.format(experiment_name))
+            self.cmd_logger.print_cmd(
+                'ERROR: No traffic experiment named {0}. Creating a new one...\n'.format(experiment_name))
 
             # attach the new experiment to folder
             folder = self.__getScenariosFolder()
@@ -322,12 +343,13 @@ class AimsunApi:
                     if seed_list is not None:
                         replication.setRandomSeed(seed_list[i])
                     self.cmd_logger.print_cmd('---- Created replication {0} with seed {1}'.format(replication.getId(),
-                                                                                  replication.getRandomSeed()))
+                                                                                                  replication.getRandomSeed()))
             else:
                 # show replcations:
                 self.cmd_logger.print_cmd('---- Reloading {0} replications: {1} \n'.format(len(replication_list),
-                                                                           [replication.getId() for replication in
-                                                                            replication_list]))
+                                                                                           [replication.getId() for
+                                                                                            replication in
+                                                                                            replication_list]))
 
             # create the average experiment result
             avg_result = GKSystem.getSystem().newObject("GKExperimentResult", self.model)
@@ -340,7 +362,8 @@ class AimsunApi:
             # add replcations to the average
             for replication in replication_list:
                 avg_result.addReplication(replication)
-                self.cmd_logger.print_cmd('---- Added replication {0} to {1}'.format(replication.getId(), avg_result.getName()))
+                self.cmd_logger.print_cmd(
+                    '---- Added replication {0} to {1}'.format(replication.getId(), avg_result.getName()))
 
             # compute the average; add to the experiment.
             experiment.addReplication(avg_result)
@@ -362,7 +385,7 @@ class AimsunApi:
         for replication in replication_list:
             replication.setRandomSeed(random.randint(0, 10000))
             self.cmd_logger.print_cmd('----Reset replication {0} with seed {1}'.format(replication.getId(),
-                                                                       replication.getRandomSeed()))
+                                                                                       replication.getRandomSeed()))
             i += 1
 
     def create_simulator(self):
@@ -465,7 +488,8 @@ class AimsunApi:
                     self.cmd_logger.print_cmd('---- set {0}: {1}'.format(key, para_value))
 
                 else:
-                    self.cmd_logger.print_cmd('\n---- ERROR: Could not recognize preset parameter entry {0}: {1}\n'.format(key, para_value))
+                    self.cmd_logger.print_cmd(
+                        '\n---- ERROR: Could not recognize preset parameter entry {0}: {1}\n'.format(key, para_value))
 
             elif para_name[0] == 'truck':
                 # truck paras
@@ -521,7 +545,8 @@ class AimsunApi:
                     self.cmd_logger.print_cmd('---- set {0}: {1}'.format(key, para_value))
 
                 else:
-                    self.cmd_logger.print_cmd('\n---- ERROR: Could not recognize preset parameter entry {0}: {1}\n'.format(key, para_value))
+                    self.cmd_logger.print_cmd(
+                        '\n---- ERROR: Could not recognize preset parameter entry {0}: {1}\n'.format(key, para_value))
 
             else:
                 raise Exception('ERROR: Could not recognize preset parameter entry {0}\n'.format(key))
@@ -530,7 +555,7 @@ class AimsunApi:
     def simulate_rep_from_paras(self, experiment, paras,
                                 simulator, avg_result, plugin,
                                 valid_data, det_weight,
-                                name, cmd_logger):
+                                name):
         """
         This is the function that used for simulate and return the simulation result.
         It can be used in two ways:
@@ -552,9 +577,9 @@ class AimsunApi:
                 sim_data: dict; [det_name] = [[speeds], [counts]]
         """
         if valid_data is not None:
-            cmd_logger.print_cmd('\n------------Simulating with {0} paras-------------------'.format(name))
+            self.cmd_logger.print_cmd('\n------------Simulating with {0} paras-------------------'.format(name))
         else:
-            cmd_logger.print_cmd('\n------------Generating validation data------------------')
+            self.cmd_logger.print_cmd('\n------------Generating validation data------------------')
 
         # set new parameters
         self.set_new_paras(experiment, paras)
@@ -569,7 +594,6 @@ class AimsunApi:
             obj_value = [0, [0]]
 
         return [obj_value, sim_data]
-
 
     # -------------------------- Utility functions for interfacing AIMSUN -------------------------------
     def __readParsFile(self, parsFilePath):
@@ -644,7 +668,8 @@ class AimsunApi:
         # print '\n\nturns_dict:{0}\n\n'.format(turns_dict)
         return turns_dict
 
-    def __createState(self, state_name, pars_dict, flows_dict, turns_dict, main_entrance_id, main_entrance_discount_ratio):
+    def __createState(self, state_name, pars_dict, flows_dict, turns_dict, main_entrance_id,
+                      main_entrance_discount_ratio):
         """
         This function creates the traffic states from the dict read from files
         :param state_name: the statename to be created
@@ -779,7 +804,8 @@ class AimsunApi:
         schedule.setTrafficDemandItem(state)
 
         if _debug:
-            self.cmd_logger.print_cmd('schedule.state.duration {0}'.format(schedule.getTrafficDemandItem().getDuration().toString()))
+            self.cmd_logger.print_cmd(
+                'schedule.state.duration {0}'.format(schedule.getTrafficDemandItem().getDuration().toString()))
 
         hr = state.getFrom().hour()
         minute = state.getFrom().minute()
@@ -813,11 +839,12 @@ class AimsunApi:
             simulation_task = GKSimulationTask(replication, GKReplication.eBatch, "", "", True)  # Other approach
             simulator.addSimulationTask(simulation_task)
             self.cmd_logger.print_cmd('Added replication {0} to simulator with status {1}. '.format(replication.getId(),
-                                                                                    replication.getSimulationStatus()))
-            self.cmd_logger.print_cmd('pending {0}; done {1}; discarded {2}; loaded {3}'.format(GKGenericExperiment.ePending,
-                                                                                GKGenericExperiment.eDone,
-                                                                                GKGenericExperiment.eDiscarded,
-                                                                                GKGenericExperiment.eLoaded))
+                                                                                                    replication.getSimulationStatus()))
+            self.cmd_logger.print_cmd(
+                'pending {0}; done {1}; discarded {2}; loaded {3}'.format(GKGenericExperiment.ePending,
+                                                                          GKGenericExperiment.eDone,
+                                                                          GKGenericExperiment.eDiscarded,
+                                                                          GKGenericExperiment.eLoaded))
         # simulate model
         if not simulator.isBusy():
             self.cmd_logger.print_cmd('Simulating...\n')
@@ -868,15 +895,19 @@ class AimsunApi:
                     self.cmd_logger.print_cmd('ERROR: Detector {0} has no data available'.format(det_name))
                 else:
                     # print_cmd('----size of data is: {0}'.format(countData.size()))
-                    #The speed data returned from AIMSUN is in km/h; 1 km/h = 0.62137 mph
+                    # The speed data returned from AIMSUN is in km/h; 1 km/h = 0.62137 mph
                     for interval in range(countData.size()):
                         avg_data[det_name][0].append(speedData.getValue(GKTimeSerieIndex(interval))[0] * KMH2MPH)
                         avg_data[det_name][1].append(countData.getValue(GKTimeSerieIndex(interval))[0])
 
                         if _show_detector_data:
                             self.cmd_logger.print_cmd('--------interval {0}: speed {1}; count {2}'.format(interval,
-                                                                                          avg_data[det_name][0][-1],
-                                                                                          avg_data[det_name][1][-1]))
+                                                                                                          avg_data[
+                                                                                                              det_name][
+                                                                                                              0][-1],
+                                                                                                          avg_data[
+                                                                                                              det_name][
+                                                                                                              1][-1]))
                             # print_cmd('----Detector {0} data:{1}'.format(det.getName(), avg_data[det.getName()])
 
         return avg_data
@@ -951,291 +982,13 @@ class AimsunApi:
         return rms_speed, rmse_speeds
 
 
-# ------------------- Functions for interfacing with optimization solver -----------------------
-def read_optquest_paras(parafile, cmd_logger):
-    """
-    This function reads the new parameters.
-    Note: MODIFY set_new_paras if the keys changed.
-    :param parafile: the parameter file, each line:
-        parameter_name,value1,value2,value3
-    :param cmd_logger: logger for cmd output
-    :return: dict. [parameter_name]:[value1, value2, value3]
-    """
-    paras = OrderedDict()
-
-    wait_time = 0
-    timeout = 0
-    while not exists(parafile):
-        time.sleep(0.1)
-        wait_time += 1
-        timeout += 1
-        if wait_time >= 10:  # sleep 1 second
-            cmd_logger.print_cmd('Waiting for paras...')
-            wait_time = 0
-
-        if timeout >= 200:  # 20 s
-            # assume finished optimization
-            return None
-
-    if exists(parafile):
-        paras = __paras_reader(parafile)
-
-    # delete the file once read
-    os.remove(parafile)
-
-    # print_cmd('Have read paras:\n')
-    # for key in paras.keys():
-    #     print_cmd('---- {0}: {1}'.format(key, paras[key]))
-
-    return paras
-
-
-def read_optquest_solution(solutionfile, cmd_logger):
-    """
-    This function reads the final solution from optquest.
-    The solver will stop at its max iteration.
-    :param solutionfile: same format as the parafile
-    :param cmd_logger: logger for cmd output
-    :return: dict. same as read_optquest_paras
-    """
-    # Have not finished optimization
-    if not exists(solutionfile):
-        return None
-
-    # a solution has been converged
-    else:
-
-        solution = __paras_reader(solutionfile)
-
-        # delete the file once read
-        # os.remove(solutionfile)
-
-        cmd_logger.print_cmd('Have read solution:\n')
-        for key in solution.keys():
-            cmd_logger.print_cmd('---- {0}: {1}'.format(key, solution[key]))
-
-        return solution
-
-
-def write_simval(simval, simvalfile, cmd_logger):
-    """
-    This function writes the simulation result to file
-    :param simval: double, the optimal value
-    :param simvalfile: the file string.
-    :param cmd_logger: logger for cmd output
-    :return:
-    """
-    f = open(simvalfile, 'w')
-    f.write(str.format("{0:.16f}", simval))
-    f.close()
-    cmd_logger.print_cmd('Wrote objective value: {0}'.format(simval))
-
-    return 0
-
-
-# ------------------- Functions for handling previously obtained obj values -----------------------
-def load_previous_opt_solutions(opt_step_file):
-    """
-    To save the optimization cost, if a value point has been evaluated in the simulation, it will be
-    logged in txt file.
-    A new optimization will start by loading previously explored value points. If a point has been
-    previously evaluated, then it will NOT be re-simulated to save time.
-    :param opt_step_file:
-    :return: [paras_list, obj_list]
-    """
-    if opt_step_file is None:
-        return None
-
-    f = open(opt_step_file, 'r')
-
-    paras_list = []
-    obj_value_list = []
-
-    for line in f:
-
-        paras = OrderedDict()
-
-        line = line.strip()
-        items = line.split(';')
-
-        # parse each line. first item is the counter, skip
-        for entry in items:
-
-            key = entry.split(':')[0]
-
-            if key == 'RMSE_avg':
-                obj_val = float(entry.split(':')[1])
-            elif key == 'RMSEs':
-                continue
-            else:
-                # the parameters
-                paras[key] = [float(v) for v in entry.split(':')[1].split(',')]
-
-        paras_list.append(paras)
-        obj_value_list.append(obj_val)
-
-    f.close()
-
-    return [paras_list, obj_value_list]
-
-
-def try_get_obj_from_previous_solutions(solution_list, new_para):
-    """
-    Check if the new_para has been previously simulated.
-    :param solution_list: the paras_list from load_previous_opt_solutions
-    :param new_para: the new parameters
-    :return:
-    """
-
-    # if not solution list
-    if solution_list is None:
-        return None
-
-    for i in range(0, len(solution_list[0])):
-
-        if new_para == solution_list[0][i]:
-            return solution_list[1][i]
-
-    # if none found
-    return None
-
-
-# save the optimization result; and the data generated
-# save logging of the optimization data
-def save_solution_data(solution, data, path_name, start_time, name):
-    """
-    This function saves the optimization result (parameters and detector data) to a file with standard format.
-        First row of file is the parameters, then
-        detector 1 speed (mph)
-        detector 2 count
-        ...
-    :param solution: the parameters
-    :param data: the detector data
-    :param path_name: the path to save to
-    :param start_time: the start time of the simulation
-    :param name: the name of the set of parameters
-    :return:
-    """
-    file_name = start_time.strftime("%Y%m%d_%H%M%S") + '_sol_'
-    f = open(path_name + file_name + name + '.csv', 'wb')
-    writer = csv.writer(f)
-    # the solution: key1, value, key2, value
-    if solution is not None:
-        list = []
-        for key in solution.keys():
-            list.append(key)
-            for item in solution[key]:
-                list.append(str(item))
-        writer.writerow(list)
-    else:
-        # just to save the validation data. true parameters are unknown
-        writer.writerow(['Data saved with unknown parameters: {0}'.format(name)])
-
-    for key in data:
-        tmp_line = []
-        tmp_line.append(key)
-        # write speed
-        for item in data[key][0]:
-            tmp_line.append(item)
-        writer.writerow(tmp_line)
-
-        tmp_line = []
-        tmp_line.append(key)
-        # write count
-        for item in data[key][1]:
-            tmp_line.append(item)
-        writer.writerow(tmp_line)
-        # writer.writerow([str(key), str(data[key][0]), str(data[key][1])])
-
-    f.close()
-
-
-# ------------------- Functions for printing analyzing results ----------
-# print out result
-def print_results(paras_list, obj_val_list, cmd_logger):
-    """
-    This function prints out the result
-    :param paras_list: a list of parameters [true_paras, default_paras]
-    :param obj_val_list: [true_obj, default_obj], each obj is a tuple ('true', float_RMSE_mph)
-    :param cmd_logger: the logger for cmd output
-    :return:
-    """
-    cmd_logger.print_cmd('\n\n===========================================================================')
-    cmd_logger.print_cmd('====================Calibration Finished===================================')
-    # Forget about beautiful printout. Just log information
-    cmd_logger.print_cmd('Parameters: \n')
-    for para in paras_list:
-        cmd_logger.print_cmd('---- {0}_paras:'.format(para[0]))
-        for key in para[1].keys():
-            cmd_logger.print_cmd('-------- {0}:    {1}'.format(key, para[1][key]))
-
-    cmd_logger.print_cmd('\nObjective values: \n')
-    for obj_val in obj_val_list:
-        cmd_logger.print_cmd('{0} objective value:\n---- RMS_speed: {1}'.format(obj_val[0], obj_val[1]))
-
-
-def print_opt_steps(opt_steps, baseline, cmd_logger):
-    """
-    This function prints out the optimization steps
-    :param opt_steps: the list updated by Opt_Logger
-    :param baseline: the objective function value of the baseline
-    :param cmd_logger: logger for cmd output
-    :return:
-    """
-    cmd_logger.print_cmd('Optimization steps: {0}'.format(opt_steps))
-    cmd_logger.print_cmd('        Optimal by {0} steps: {1} mph, default: {1} mph'.format(len(opt_steps),
-                                                                                          np.min(opt_steps),
-                                                                                          baseline))
-
-
-# -------------------------- Other utility functions -------------------------------
-def __isNumber(s):
-    """
-    This function tests if string s is a number
-    :param s: string
-    :return:
-    """
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
-
-
-def __paras_reader(parafile):
-    """
-    A universal paras reader assuming the file exist.
-    :param parafile: the file to read
-    :return: a dict, key-value
-    """
-    paras = OrderedDict()
-
-    f = open(parafile, 'r')
-
-    for line in f:
-        line = line.strip()
-        items = line.split(',')
-
-        # first item is the key
-        paras[items[0]] = []
-
-        for i in range(1, len(items)):
-            paras[items[0]].append(float(items[i]))
-
-    f.close()
-
-    return paras
-
-
 # ====================================================================================================
-# classes for logging
-# ====================================================================================================
-
-# ------------------- Class for cmd window logger -----------------------
-class Cmd_Logger:
+# ------------------- Class for cmd window logging and printing -----------------------
+class CmdLogger:
     """
     This class logs the output in the cmd window to a text file
     """
+
     def __init__(self, path_str, start_time):
         """
         Start the logger
@@ -1246,16 +999,17 @@ class Cmd_Logger:
         file_name = start_time.strftime("%Y%m%d_%H%M%S") + '_cmd_log'
         self.cmd_logger = open(path_str + file_name + '.txt', 'wb')
 
-    def cmd_logger_header(self,description,
-                      g_num_iter, g_num_rep, seed_list,
-                      obj_func,
-                      det_for_validation,
-                      main_entrance_id, main_entrance_discount,
-                      paras_list):
+    def cmd_logger_header(self, description,
+                          g_num_iter, g_num_rep, seed_list,
+                          obj_func,
+                          det_for_validation,
+                          main_entrance_id, main_entrance_discount,
+                          paras_list):
         self.print_cmd('Calibration experiment description:\n ---- {0}\n'.format(description))
         self.print_cmd('Calibration Configuration:')
-        self.print_cmd('---- Objective function is:           Minimize    {0}xRMS_speed + {1}xRMS_count'.format(obj_func[0],
-                                                                                                           obj_func[1]))
+        self.print_cmd(
+            '---- Objective function is:           Minimize    {0}xRMS_speed + {1}xRMS_count'.format(obj_func[0],
+                                                                                                     obj_func[1]))
         self.print_cmd('---- Detectors used for validation:   {0}'.format(det_for_validation))
         self.print_cmd('---- Number of iterations:            {0}'.format(g_num_iter))
         self.print_cmd('---- Main Entrance is:                {0}'.format(main_entrance_id))
@@ -1284,12 +1038,49 @@ class Cmd_Logger:
         """
         self.cmd_logger.close()
 
+    def print_results(self, paras_list, obj_val_list):
+        """
+        This function prints out the result
+        :param paras_list: a list of parameters [true_paras, default_paras]
+        :param obj_val_list: [true_obj, default_obj], each obj is a tuple ('true', float_RMSE_mph)
+        :param cmd_logger: the logger for cmd output
+        :return:
+        """
+        self.cmd_logger.print_cmd('\n\n===========================================================================')
+        self.cmd_logger.print_cmd('====================Calibration Finished===================================')
+        # Forget about beautiful printout. Just log information
+        self.cmd_logger.print_cmd('Parameters: \n')
+        for para in paras_list:
+            self.cmd_logger.print_cmd('---- {0}_paras:'.format(para[0]))
+            for key in para[1].keys():
+                self.cmd_logger.print_cmd('-------- {0}:    {1}'.format(key, para[1][key]))
+
+        self.cmd_logger.print_cmd('\nObjective values: \n')
+        for obj_val in obj_val_list:
+            self.cmd_logger.print_cmd('{0} objective value:\n---- RMS_speed: {1}'.format(obj_val[0], obj_val[1]))
+
+    def print_opt_steps(self, opt_steps, baseline):
+        """
+        This function prints out the optimization steps
+        :param opt_steps: the list updated by Opt_Logger
+        :param baseline: the objective function value of the baseline
+        :param cmd_logger: logger for cmd output
+        :return:
+        """
+        self.cmd_logger.print_cmd('Optimization steps: {0}'.format(opt_steps))
+        self.cmd_logger.print_cmd('        Optimal by {0} steps: {1} mph, default: {1} mph'.format(len(opt_steps),
+                                                                                                   np.min(opt_steps),
+                                                                                                   baseline))
+
 
 # ------------------- Class for handling optimization logger -----------------------
-class OptLogger:
+class Opt:
     """
-    This class logs the optimization steps into a text file
+    This class:
+        - Handles the communication with the optimization
+        - logs the optimization steps into a text file
     """
+
     def __init__(self, path_str, start_time):
         """
         Start the logger
@@ -1327,7 +1118,7 @@ class OptLogger:
         opt_steps.append(obj_values[0])
 
         # write in file
-        self.opt_logger_file.write(string+'\n')
+        self.opt_logger_file.write(string + '\n')
 
     def stop(self):
         """
@@ -1336,355 +1127,231 @@ class OptLogger:
         """
         self.opt_logger_file.close()
 
+    # ------------------- Functions for interfacing with optimization solver -----------------------
+    def read_opt_paras(self, parafile, cmd_logger):
+        """
+        This function reads the new parameters.
+        Note: MODIFY set_new_paras if the keys changed.
+        :param parafile: the parameter file, each line:
+            parameter_name,value1,value2,value3
+        :param cmd_logger: logger for cmd output
+        :return: dict. [parameter_name]:[value1, value2, value3]
+        """
+        paras = OrderedDict()
 
+        wait_time = 0
+        timeout = 0
+        while not exists(parafile):
+            time.sleep(0.1)
+            wait_time += 1
+            timeout += 1
+            if wait_time >= 10:  # sleep 1 second
+                cmd_logger.print_cmd('Waiting for paras...')
+                wait_time = 0
 
-# =================================================================================================
+            if timeout >= 200:  # 20 s
+                # assume finished optimization
+                return None
 
-# Deprecated function
-def setup_experiment_I80_EB(model, experiment_name, scenario, preset_paras_file):
-    """
-    This function sets upt the experiment with parameters
-    :param model:
-    :param experiment_name:
-    :param scenario:
-    :param preset_paras_file: the preset parameters, Better be set in ang file
-    :return:
-    """
+        if exists(parafile):
+            paras = self.__paras_reader(parafile)
 
-    print_cmd('\nSetting up experiment...\n')
+        # delete the file once read
+        os.remove(parafile)
 
-    experiment = model.getCatalog().findByName(QString(experiment_name))
-    if experiment is None or not experiment.isA(QString("GKExperiment")):
-        experiment = GKSystem.getSystem().newObject("GKExperiment", model, -1, True)
-        print_cmd('ERROR: No traffic experiment named {0}. Creating a new one...\n'.format(experiment_name))
+        # print_cmd('Have read paras:\n')
+        # for key in paras.keys():
+        #     print_cmd('---- {0}: {1}'.format(key, paras[key]))
 
-        # attach the new experiment to folder
-        folder = __getScenariosFolder(model)
-        folder.append(experiment)
+        return paras
 
-    experiment.setScenario(scenario)
+    def read_opt_solution(self, solutionfile, cmd_logger):
+        """
+        This function reads the final solution from optquest.
+        The solver will stop at its max iteration.
+        :param solutionfile: same format as the parafile
+        :param cmd_logger: logger for cmd output
+        :return: dict. same as read_optquest_paras
+        """
+        # Have not finished optimization
+        if not exists(solutionfile):
+            return None
 
-    # ==================================================================================
-    # TODO: some parameters still needs to be set in the .ang file which is easier, including:
-    # TODO: the speed limit, simulation step, strategy plan...
-
-    # read preset paras, which contains the initial values
-    # Here the preset parameters is limited to a few parameters
-    preset_paras = read_preset_paras(preset_paras_file)
-
-    # ==================================================================================
-    # vehicle class parameters
-    car_type = model.getCatalog().find(53)
-    if not car_type.isA(QString("GKVehicle")):
-        print_cmd('Error: Car type is not correct: demand may not correctly loaded\n')
-        return None
-
-    # unique truck id is 56
-    truck_type = model.getCatalog().find(56)
-    if not truck_type.isA(QString("GKVehicle")):
-        print_cmd('Error: Truck type is not correct: demand may not correctly loaded\n')
-        return None
-
-    print_cmd('Setting preset parameters:')
-
-    for key in preset_paras.keys():
-
-        # key format: car_maxSpeed
-        para_name = key.split('_')
-        para_value = preset_paras[key]
-        if para_name[0] == 'car':
-            # car paras
-            if para_name[1] == 'maxSpeed':
-                car_type.setDataValueByID(GKVehicle.maxSpeedMean, QVariant(para_value[0]))
-                car_type.setDataValueByID(GKVehicle.maxSpeedDev, QVariant(para_value[1]))
-                car_type.setDataValueByID(GKVehicle.maxSpeedMin, QVariant(para_value[2]))
-                car_type.setDataValueByID(GKVehicle.maxSpeedMax, QVariant(para_value[3]))
-                print_cmd('---- set {0}: {1}'.format(key, para_value))
-
-            elif para_name[1] == 'speedAcceptance':
-                car_type.setDataValueByID(GKVehicle.speedAcceptanceMean, QVariant(para_value[0]))
-                car_type.setDataValueByID(GKVehicle.speedAcceptanceDev, QVariant(para_value[1]))
-                car_type.setDataValueByID(GKVehicle.speedAcceptanceMin, QVariant(para_value[2]))
-                car_type.setDataValueByID(GKVehicle.speedAcceptanceMax, QVariant(para_value[3]))
-                print_cmd('---- set {0}: {1}'.format(key, para_value))
-
-            elif para_name[1] == 'maxAccel':
-                car_type.setDataValueByID(GKVehicle.maxAccelMean, QVariant(para_value[0]))
-                car_type.setDataValueByID(GKVehicle.maxAccelDev, QVariant(para_value[1]))
-                car_type.setDataValueByID(GKVehicle.maxAccelMin, QVariant(para_value[2]))
-                car_type.setDataValueByID(GKVehicle.maxAccelMax, QVariant(para_value[3]))
-                print_cmd('---- set {0}: {1}'.format(key, para_value))
-
-            elif para_name[1] == 'reactionTime':
-                # [reaction_time, reaction_stop, reaction_light, reaction_prob]
-                car_react = GKVehicleReactionTimes(para_value[0], para_value[1],
-                                                   para_value[2], para_value[3])
-
-                car_type.setVariableReactionTimes([car_react])
-                experiment.setVariableReactionTimesMicro(car_type, [car_react])
-                print_cmd('---- set {0}: {1}'.format(key, para_value))
-
-            elif para_name[1] == 'minDist':
-                car_type.setDataValueByID(GKVehicle.minDistMean, QVariant(para_value[0]))
-                car_type.setDataValueByID(GKVehicle.minDistDev, QVariant(para_value[1]))
-                car_type.setDataValueByID(GKVehicle.minDistMin, QVariant(para_value[2]))
-                car_type.setDataValueByID(GKVehicle.minDistMax, QVariant(para_value[3]))
-                print_cmd('---- set {0}: {1}'.format(key, para_value))
-
-            elif para_name[1] == 'sensitivityFactor':
-                car_type.setDataValueByID(GKVehicle.sensitivityFactorMean, QVariant(para_value[0]))
-                car_type.setDataValueByID(GKVehicle.sensitivityFactorDev, QVariant(para_value[1]))
-                car_type.setDataValueByID(GKVehicle.sensitivityFactorMin, QVariant(para_value[2]))
-                car_type.setDataValueByID(GKVehicle.sensitivityFactorMax, QVariant(para_value[3]))
-                print_cmd('---- set {0}: {1}'.format(key, para_value))
-
-            else:
-                print_cmd('\n---- ERROR: Could not recognize preset parameter entry {0}: {1}\n'.format(key, para_value))
-
-
-        elif key.split('_')[0] == 'truck':
-            # truck paras
-            if para_name[1] == 'maxSpeed':
-                truck_type.setDataValueByID(GKVehicle.maxSpeedMean, QVariant(para_value[0]))
-                truck_type.setDataValueByID(GKVehicle.maxSpeedDev, QVariant(para_value[1]))
-                truck_type.setDataValueByID(GKVehicle.maxSpeedMin, QVariant(para_value[2]))
-                truck_type.setDataValueByID(GKVehicle.maxSpeedMax, QVariant(para_value[3]))
-                print_cmd('---- set {0}: {1}'.format(key, para_value))
-
-            elif para_name[1] == 'speedAcceptance':
-                truck_type.setDataValueByID(GKVehicle.speedAcceptanceMean, QVariant(para_value[0]))
-                truck_type.setDataValueByID(GKVehicle.speedAcceptanceDev, QVariant(para_value[1]))
-                truck_type.setDataValueByID(GKVehicle.speedAcceptanceMin, QVariant(para_value[2]))
-                truck_type.setDataValueByID(GKVehicle.speedAcceptanceMax, QVariant(para_value[3]))
-                print_cmd('---- set {0}: {1}'.format(key, para_value))
-
-            elif para_name[1] == 'maxAccel':
-                truck_type.setDataValueByID(GKVehicle.maxAccelMean, QVariant(para_value[0]))
-                truck_type.setDataValueByID(GKVehicle.maxAccelDev, QVariant(para_value[1]))
-                truck_type.setDataValueByID(GKVehicle.maxAccelMin, QVariant(para_value[2]))
-                truck_type.setDataValueByID(GKVehicle.maxAccelMax, QVariant(para_value[3]))
-                print_cmd('---- set {0}: {1}'.format(key, para_value))
-
-            elif para_name[1] == 'reactionTime':
-                # [reaction_time, reaction_stop, reaction_light, reaction_prob]
-                truck_react = GKVehicleReactionTimes(para_value[0], para_value[1],
-                                                     para_value[2], para_value[3])
-
-                truck_type.setVariableReactionTimes([truck_react])
-                experiment.setVariableReactionTimesMicro(truck_type, [truck_react])
-                print_cmd('---- set {0}: {1}'.format(key, para_value))
-
-            elif para_name[1] == 'minDist':
-                truck_type.setDataValueByID(GKVehicle.minDistMean, QVariant(para_value[0]))
-                truck_type.setDataValueByID(GKVehicle.minDistDev, QVariant(para_value[1]))
-                truck_type.setDataValueByID(GKVehicle.minDistMin, QVariant(para_value[2]))
-                truck_type.setDataValueByID(GKVehicle.minDistMax, QVariant(para_value[3]))
-                print_cmd('---- set {0}: {1}'.format(key, para_value))
-
-            elif para_name[1] == 'sensitivityFactor':
-                truck_type.setDataValueByID(GKVehicle.sensitivityFactorMean, QVariant(para_value[0]))
-                truck_type.setDataValueByID(GKVehicle.sensitivityFactorDev, QVariant(para_value[1]))
-                truck_type.setDataValueByID(GKVehicle.sensitivityFactorMin, QVariant(para_value[2]))
-                truck_type.setDataValueByID(GKVehicle.sensitivityFactorMax, QVariant(para_value[3]))
-                print_cmd('---- set {0}: {1}'.format(key, para_value))
-
-            else:
-                print_cmd('\n---- ERROR: Could not recognize preset parameter entry {0}: {1}\n'.format(key, para_value))
-
+        # a solution has been converged
         else:
-            print_cmd('\nERROR: Could not recognize preset parameter entry {0}\n '.format(key))
 
-    return experiment
+            solution = self.__paras_reader(solutionfile)
 
+            # delete the file once read
+            # os.remove(solutionfile)
 
-# Deprecated
-def adjust_I80_demand(model, para):
-    """
-    DEPRECATED: a quick hack to adjust the demand
-    :param model:
-    :param para:
-    :return:
-    """
-    para_name = para[0]
+            cmd_logger.print_cmd('Have read solution:\n')
+            for key in solution.keys():
+                cmd_logger.print_cmd('---- {0}: {1}'.format(key, solution[key]))
 
-    print_cmd('Setting flows: {0}'.format(para))
+            return solution
 
-    # convert to 30 states
-    flow_ratio = []
-    for i in range(0, len(para[1])):
-        flow_ratio.append(para[1][i])
-        flow_ratio.append(para[1][i])
+    def write_simval(self, simval, simvalfile, cmd_logger):
+        """
+        This function writes the simulation result to file
+        :param simval: double, the optimal value
+        :param simvalfile: the file string.
+        :param cmd_logger: logger for cmd output
+        :return:
+        """
+        f = open(simvalfile, 'w')
+        f.write(str.format("{0:.16f}", simval))
+        f.close()
+        cmd_logger.print_cmd('Wrote objective value: {0}'.format(simval))
 
-    if len(flow_ratio) != 30:
-        print_cmd('\nERROR: adjust_I80_demand now only support 15 flow variables.\n')
+        return 0
 
-    state_type = model.getType("GKTrafficState")
+    def __paras_reader(self, parafile):
+        """
+        A universal paras reader assuming the file exist.
+        :param parafile: the file to read
+        :return: a dict, key-value
+        """
+        paras = OrderedDict()
 
-    if para_name.split('_')[0] == 'main':
+        f = open(parafile, 'r')
 
-        main_entrance = __findSection(model, 21216)
-        truck_ratio = 0.27
+        for line in f:
+            line = line.strip()
+            items = line.split(',')
 
-        main_count_from_EB3 = [159, 181, 183, 176, 181,
-                               180, 175, 206, 187, 195,
-                               174, 176, 185, 173, 160,
-                               167, 159, 123, 174, 196,
-                               168, 132, 149, 173, 143,
-                               147, 157, 128, 130, 161]
-        # change the input ratio (0.9~1.1) to flow veh/hr
-        main_flow = []
-        for i in range(0, len(flow_ratio)):
-            main_flow.append(flow_ratio[i] * 12.0 * main_count_from_EB3[i])
+            # first item is the key
+            paras[items[0]] = []
 
-        for state in model.getCatalog().getObjectsByType(state_type).itervalues():
+            for i in range(1, len(items)):
+                paras[items[0]].append(float(items[i]))
 
-            # set the car state and the order must be correct
-            if state.getVehicle().getId() == 53:
-                # find which state is this
-                state_name = str(state.getName())
-                # in this format: cong_state#_car/truck
-                middle_name = state_name.split('_')[1]
-                # print_cmd('middle_name: {0}'.format(middle_name))
-                state_id = int(middle_name[5:])
-                state.setEntranceFlow(main_entrance, None, float(main_flow[state_id - 1] * (1 - truck_ratio)))
+        f.close()
 
-            # set the truck state and the order must be correct
-            elif state.getVehicle().getId() == 56:
-                # find which state is this
-                state_name = str(state.getName())
-                # in this format: cong_state#_car/truck
-                middle_name = state_name.split('_')[1]
-                # print_cmd('middle_name: {0}'.format(middle_name))
-                state_id = int(middle_name[5:])
-                state.setEntranceFlow(main_entrance, None, float(main_flow[state_id - 1] * truck_ratio))
+        return paras
 
-    elif para_name.split('_')[0] == 'onramp':
-        onramp_4 = __findSection(model, 1357)
+    # ------------------- Functions for loading and processing optimization solutions ---------------
+    def load_previous_opt_solutions(self, opt_step_file):
+        """
+        To save the optimization cost, if a value point has been evaluated in the simulation, it will be
+        logged in txt file.
+        A new optimization will start by loading previously explored value points. If a point has been
+        previously evaluated, then it will NOT be re-simulated to save time.
+        :param opt_step_file:
+        :return: [paras_list, obj_list]
+        """
+        if opt_step_file is None:
+            return None
 
+        f = open(opt_step_file, 'r')
 
-# Deprecated
-def read_preset_paras(presetparasfile):
-    """
-    Read preset parameters. NO LONGER NEEDED. SIMPLY either set in AIMSUN ang. OR use the default
-    :param presetparasfile:
-    :return:
-    """
+        paras_list = []
+        obj_value_list = []
 
-    if not exists(presetparasfile):
-        print_cmd('\nWARNING: No preset paras set \n ---- could not find file {0}\n'.format(presetparasfile))
+        for line in f:
+
+            paras = OrderedDict()
+
+            line = line.strip()
+            items = line.split(';')
+
+            # parse each line. first item is the counter, skip
+            for entry in items:
+
+                key = entry.split(':')[0]
+
+                if key == 'RMSE_avg':
+                    obj_val = float(entry.split(':')[1])
+                elif key == 'RMSEs':
+                    continue
+                else:
+                    # the parameters
+                    paras[key] = [float(v) for v in entry.split(':')[1].split(',')]
+
+            paras_list.append(paras)
+            obj_value_list.append(obj_val)
+
+        f.close()
+
+        return [paras_list, obj_value_list]
+
+    def try_get_obj_from_previous_solutions(self, solution_list, new_para):
+        """
+        Check if the new_para has been previously simulated.
+        :param solution_list: the paras_list from load_previous_opt_solutions
+        :param new_para: the new parameters
+        :return:
+        """
+
+        # if not solution list
+        if solution_list is None:
+            return None
+
+        for i in range(0, len(solution_list[0])):
+
+            if new_para == solution_list[0][i]:
+                return solution_list[1][i]
+
+        # if none found
         return None
 
-    else:
-        preset_paras = __paras_reader(presetparasfile)
+    def save_solution_data(self, solution, data, path_name, start_time, name):
+        """
+        This function saves the optimization result (parameters and detector data) to a file with standard format.
+            First row of file is the parameters, then
+            detector 1 speed (mph)
+            detector 2 count
+            ...
+        :param solution: the parameters
+        :param data: the detector data
+        :param path_name: the path to save to
+        :param start_time: the start time of the simulation
+        :param name: the name of the set of parameters
+        :return:
+        """
+        file_name = start_time.strftime("%Y%m%d_%H%M%S") + '_sol_'
+        f = open(path_name + file_name + name + '.csv', 'wb')
+        writer = csv.writer(f)
+        # the solution: key1, value, key2, value
+        if solution is not None:
+            list = []
+            for key in solution.keys():
+                list.append(key)
+                for item in solution[key]:
+                    list.append(str(item))
+            writer.writerow(list)
+        else:
+            # just to save the validation data. true parameters are unknown
+            writer.writerow(['Data saved with unknown parameters: {0}'.format(name)])
 
-        print_cmd('Reading the preset paras...\n')
-        for key in preset_paras.keys():
-            pass
-            # print_cmd('---- {0}: {1}'.format(key, preset_paras[key]))
+        for key in data:
+            tmp_line = []
+            tmp_line.append(key)
+            # write speed
+            for item in data[key][0]:
+                tmp_line.append(item)
+            writer.writerow(tmp_line)
 
-        return preset_paras
+            tmp_line = []
+            tmp_line.append(key)
+            # write count
+            for item in data[key][1]:
+                tmp_line.append(item)
+            writer.writerow(tmp_line)
+            # writer.writerow([str(key), str(data[key][0]), str(data[key][1])])
 
-# deprecated
-# This function plots the optimization steps.
-# input: the opt_logger as we update in every iteration,
-#        the obj_ratio (1,0) (speed, count), and the obj_val using default parameters used as a baseline
-def plot_opt_steps(opt_solution, obj_ratio, obj_default_val):
-    global fig_handle
-
-    # compute the objective values to be plotted
-    steps = []
-    obj_values = []
-    for paras in opt_solution:
-        steps.append(float(paras[0]))
-        obj_values.append(float(paras[-2]) * obj_ratio[0] + float(paras[-1] * obj_ratio[1]))
-
-    default_baseline = float(obj_default_val[0]) * obj_ratio[0] + float(obj_default_val[1]) * obj_ratio[1]
-
-    if fig_handle is None:
-        fig_handle, = plt.plot(obj_values)
-        fig_handle.set_xlabel('Iteration step')
-        fig_handle.set_ylabel('Objective value')
-        fig_handle.set_title('Optimization progress (default val {0})'.format(default_baseline))
-    else:
-        # update and plot the figure
-        # fig_handle.set_xdata(steps)
-        fig_handle.set_ydata(obj_values)
-
-    plt.draw()
-    plt.show()
-
-
-# deprecated
-# adjust the demand data
-# paras['ramp_on1_car']
-def adjust_ramps_I80_EB_full(model, paras):
-    state_type = model.getType("GKTrafficState")
-
-    # print 'paras: {0}'.format(paras)
-
-    # originally 500 veh/hr
-    onramp_3_1 = __findSection(model, 21192)  # [0, 500] veh/hr
-    onramp_3_2 = __findSection(model, 21201)
-
-    # first off ramp at junction 3
-    diverge_3_1_main = __findSection(model, 3412)
-    diverge_3_1_to = __findSection(model, 3399)
-    diverge_3_1_off = __findSection(model, 343)  # [0,2]
-
-    # second off ramp at junction 3
-    diverge_3_2_main = __findSection(model, 3400)
-    diverge_3_2_to = __findSection(model, 3401)
-    diverge_3_2_off = __findSection(model, 1039)
-
-    # onramp of 4
-    onramp_4 = __findSection(model, 1357)
-
-    # originally 3%
-    diverge_4_main = __findSection(model, 40962)
-    diverge_4_to = __findSection(model, 3248)
-    diverge_4_off = __findSection(model, 1501)  # [0, 20]
-
-    for state in model.getCatalog().getObjectsByType(state_type).itervalues():
-        # print_cmd('state.getVehicle(): {0}'.format(state.getVehicle().getId() ))
-        if state.getVehicle().getId() == 53:
-            # ramp3, first off and on
-            state.setTurningPercentage(diverge_3_1_main, diverge_3_1_off, None, float(paras['ramp3'][0]))
-            state.setTurningPercentage(diverge_3_1_main, diverge_3_1_to, None, 100 - float(paras['ramp3'][0]))
-            state.setEntranceFlow(onramp_3_1, None, float(paras['ramp3'][1]))
-
-            # ramp3, second off
-            state.setTurningPercentage(diverge_3_2_main, diverge_3_2_off, None, float(paras['ramp3'][2]))
-            state.setTurningPercentage(diverge_3_2_main, diverge_3_2_to, None, 100 - float(paras['ramp3'][2]))
-
-            # ramp4, off and on
-            state.setTurningPercentage(diverge_4_main, diverge_4_off, None, float(paras['ramp4'][0]))
-            state.setTurningPercentage(diverge_4_main, diverge_4_to, None, 100 - float(paras['ramp4'][0]))
-            state.setEntranceFlow(onramp_4, None, float(paras['ramp4'][1]))
-
-            # main entrance flow
-            # state.setEntranceFlow
+        f.close()
 
 
-# deprecated
-# add a noise model for the validation data.
-# noise_mode is speed_noise_model[det] = [bias, normal_distr_dev]
-def add_noise_to_data(data, speed_noise_model, count_noise_model):
-    new_data = OrderedDict()
-
-    for det in data.keys():
-
-        speed = data[det][0]
-        count = data[det][1]
-
-        new_speed = []
-        new_count = []
-
-        for i in range(0, len(speed)):
-            new_value = speed[i] + speed_noise_model[det][0] + np.random.normal(0, speed_noise_model[det][1], 1)
-            new_speed.append(np.max([0, new_value]))
-            new_value = count[i] + count_noise_model[det][0] + np.random.normal(0, count_noise_model[det][1], 1)
-            new_count.append(np.max([0, new_value]))
-
-        new_data[det] = [new_speed, new_count]
-
-    return new_data
+# -------------------------- Other utility functions -------------------------------
+def __isNumber(s):
+    """
+    This function tests if string s is a number
+    :param s: string
+    :return:
+    """
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
