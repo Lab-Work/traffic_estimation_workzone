@@ -1,0 +1,71 @@
+# ======================================================================================
+# This file contains the configuration for calibrating I80 work zone.
+# ======================================================================================
+
+# ---------- File directories ----------
+# Use the following file for communication with the optimizer
+com_dir:E:/sim_opt_com/
+
+# names that should be used in .ang
+#  - demand name: traffic_state + '_demand'
+#  - scenario name: traffic_state
+#  - experiment name: traffic_state + '_exp'
+traffic_state:congflow
+validFilePath:C:/Users/TrafficControl/Dropbox/DesktopServer/Workzone_autocalibration/data/
+logger_path:C:/Users/TrafficControl/Dropbox/DesktopServer/Workzone_autocalibration/data/
+
+# the file that saved previous simulation result for each optimization step.
+# opt_step_file = 'C:/Users/TrafficControl/Dropbox/DesktopServer/Workzone_autocalibration/I80_EB/Logs/thread1_previous_sim_result.csv'
+opt_step_file:None
+
+# ---------- Specify demand ----------
+# Demand can be specified in two ways: traffic states or OD matrix.
+#   - For traffic states: use function read_demand_from_file with three files as inputs
+#   - For OD matrix: use built in script in AIMSUN and load via GUI. Then in this script,
+#     use function load_demand_from_ang() with the demand name imported in AIMSUN.
+# deprecated
+main_entrance_id:21216
+main_entrance_discount:1.0
+
+# ---------- Configure seeds ----------
+# Run multiple replications for each set of parameters
+g_num_rep:10
+seed_list:3503,12358,6370,23798,28860,14452,21488,7893,586,30447
+
+# Specify the maximam number of optimization steps
+g_max_iter:1000
+
+# ---------- Detector list for computing the error ----------
+# Specify the list of detectors with the name specified in AIMSUN ang file
+# EB3 was used for generating the main inflow, hence do not use as the validation data.
+# smart_det_strs = ['EB5','EB7','EB9','EB12']
+# radar_det_strs = ['EB4','EB6','EB8','EB10','EB14','EB15','EB16']
+all_det_strs:EB4,EB5,EB6,EB7,EB8,EB9,EB10,EB11,EB12,EB14,EB15,EB16
+
+# Specify the detectors used for validation and their associated weights
+# Detector EB14 is right before the work zone, i.e., where merging occurs, hence less weight. 
+# Detecotr EB15 and EB16 are inside the work zone, i.e., outside of the estiamtion scope.
+det_used:EB4,EB5,EB6,EB7,EB8,EB9,EB10,EB11,EB12,EB14
+det_used_weight:EB4,1.0;EB5,1.0;EB6,1.0;EB7,1.0;EB8,1.0;EB9,1.0;EB10,1.0;EB11,1.0;EB12,1.0;EB14,0.5
+
+# Define the way to compute the objective function
+# obj_fun[0]*RMS_speed + obj_fun[1]*RMS_count
+obj_fun:1.0,0.0
+
+# ------------ For processing the validation data ------------
+# the following two time strings are used to import the validation data in the selected time period
+# They should be the exact start and end time of the simulated period (e.g. fist 15 cong states:  05/01/2015 15:30 ~ 05/01/2015 16:45)
+start_time_str:05/01/2015 15:30
+end_time_str:05/01/2015 18:00
+
+# ======================================================================================
+# The parameters for simulation
+# ======================================================================================
+# set up the simulation flag
+simulate_default:True
+simulate_user:False
+simulate_newseed:True
+
+# ======================================================================================
+# End of configurations in this block
+# ======================================================================================

@@ -1,3 +1,0 @@
-cd "C:\Users\Yanning\Dropbox\Code\IDOT-SmartWorkzone\AutoCalibration\result\I57_SB\aimsun_files"
-"C:\Program Files\TSS-Transport Simulation Systems\Aimsun 8.0\aconsole.exe" -script "C:\Users\Yanning\Dropbox\Code\IDOT-SmartWorkzone\AutoCalibration\src\aimsun_api\thread1_sim_sol_I57.py" "C:\Users\Yanning\Code\IDOT-SmartWorkzone\AutoCalibration\result\I57_SB\aimsun_files\thread1_I57_SB_original.ang"
-pause
