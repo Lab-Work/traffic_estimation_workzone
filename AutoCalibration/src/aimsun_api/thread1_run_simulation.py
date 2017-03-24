@@ -17,14 +17,15 @@ Usage:
 
 __author__ = 'Yanning Li'
 
+workzone = 'I80'
+thread = 'thread1'
+top_dir = 'C:\\Users\\TrafficControl\\Dropbox\\Code\\traffic_estimation_workzone\\AutoCalibration\\'
 
 def main(argv):
 
     # =============================================================================================================
     # Read and parse the configuration file for this work zone and thread
-    workzone = argv[1]
-    thread = argv[2]
-    config = parse_config(workzone, thread)
+    config = parse_config(workzone, thread, top_dir)
 
     # =============================================================================================================
     # a timeout flag. If not paras or solution paras are obtained in 60 s. Then stop AIMSUN.
@@ -34,10 +35,10 @@ def main(argv):
     solved_flag = False
 
     # keep track of the current best parameter and its associated objective
-    default_paras = load_paras('../data/{0}/default_paras.txt'.format(workzone))
-    default_obj = -1.0
+    default_paras = load_paras(top_dir+'data\\{0}\\default_paras.txt'.format(workzone))
+    default_obj_avg = -1.0
     best_para = deepcopy(default_paras)
-    best_obj = np.inf
+    best_obj_avg = np.inf
 
     # keep track of start time:
     start_time = datetime.now()
@@ -83,9 +84,9 @@ def main(argv):
         idx = np.argmin( np.array( solution_list[1] ) )
 
         best_para = deepcopy(solution_list[0][idx])
-        best_obj = deepcopy(solution_list[1][idx])
+        best_obj_avg = deepcopy(solution_list[1][idx])
 
-        cmd.print_cmd('\nBest obj from loaded parameters: {0}\n'.format(best_obj))
+        cmd.print_cmd('\nBest obj from loaded parameters: {0}\n'.format(best_obj_avg))
     else:
         solution_list = None
 
@@ -136,17 +137,18 @@ def main(argv):
                 default_result = aimsun.simulate_rep_from_paras(experiment, default_paras,
                                                          simulator, avg_result, plugin,
                                                          valid_data, config['det_used_weight'], 'default')
+                # default_result = fake_simulator(default_paras)
 
                 opt.save_solution_data(default_paras, default_result[1], config['logger_path'], start_time, 'default')
 
                 # --------------------------------------------------
                 # For printing result
                 # compute the objective function value if using the true parameters
-                default_obj = default_result[0][0]
-                best_obj = default_obj
+                default_obj = default_result[0]
+                best_obj_avg = default_obj[0]
 
             else:
-                default_obj = -1.0
+                default_obj = [-1.0,[]]
 
             # ==========================================================================================================
             # Iterating parameters
@@ -162,7 +164,7 @@ def main(argv):
                 expected_finish_time = datetime.now() + run_time*(config['g_max_iter'] + 3 - iter_counter)/simulated_iter_counter
 
                 # print out run time information
-                cmd.print_cmd('\n-----------{1}-------Iteration {0}------------------------'.format(iter_counter), thread)
+                cmd.print_cmd('\n-----------{1}-------Iteration {0}------------------------'.format(iter_counter, thread))
                 cmd.print_cmd('Started simulation at: {0}'.format(start_time.strftime("%Y-%m-%d %H:%M:%S")))
                 cmd.print_cmd('Simulation run time  : {0}'.format(str(run_time)))
                 cmd.print_cmd('Expected to finish at: {0}\n'.format(expected_finish_time.strftime("%Y-%m-%d %H:%M:%S")))
@@ -201,9 +203,9 @@ def main(argv):
                 # Simulate and get the objective function value
                 # ======================================================================================================
                 # first check previous solutions
-                tmp_obj_val = opt.try_get_obj_from_previous_solutions(solution_list, paras)
+                tmp_obj_val_avg = opt.try_get_obj_from_previous_solutions(solution_list, paras)
 
-                if tmp_obj_val is None:
+                if tmp_obj_val_avg is None:
                     # set the default parameters, and then overwrite. The reason is the new paras may not be
                     # complete, hence need to make sure the other paras are in default.
                     # the true parameters are the default.
@@ -218,36 +220,38 @@ def main(argv):
                                                          simulator, avg_result, plugin,
                                                          valid_data, config['det_used_weight'],
                                                          'iteration {0}'.format(iter_counter))
-
+                    # result = fake_simulator(paras)
                     # evaluate the average objective function value
-                    obj_value = result[0][0]
+                    obj_value = result[0]
+                    obj_value_avg = obj_value[0]
 
                     # number of simulations
                     simulated_iter_counter += 1
 
                 else:
-                    obj_value = tmp_obj_val
+                    obj_value_avg = tmp_obj_val_avg
+                    obj_value = [obj_value_avg, []]
                     cmd.print_cmd('Got obj value {0} from previous solutions'.format(tmp_obj_val))
 
                 # ======================================================================================================
                 # send simulation value to Optimizor
                 # ======================================================================================================
-                opt.write_simval(obj_value, config['sim_val_file'], cmd)
+                opt.write_simval(obj_value_avg, config['sim_val_file'], cmd)
 
                 # ======================================================================================================
                 # update the current best value
                 # ======================================================================================================
-                if obj_value <= best_obj:
+                if obj_value_avg <= best_obj_avg:
                     # found better parameters
                     best_para = deepcopy(paras)
-                    best_obj = deepcopy(obj_value)
+                    best_obj_avg = deepcopy(obj_value_avg)
 
                 # ======================================================================================================
                 # Log the result
                 # ======================================================================================================
                 opt.log_opt_step(opt_solution, iter_counter, paras, obj_value)
 
-                cmd.print_opt_steps(opt_solution, default_obj)
+                cmd.print_opt_steps(opt_solution, default_obj_avg)
 
                 iter_counter += 1
 
@@ -271,8 +275,10 @@ def main(argv):
                                                          simulator, avg_result, plugin,
                                                          valid_data, config['det_used_weight'],
                                                          'iteration Optimal')
+                # result = fake_simulator(optimal_paras)
 
-                optimal_obj = result[0][0]
+                optimal_obj = result[0]
+                optimal_obj_avg = result[0][0]
                 optimal_data = result[1]
                 opt.save_solution_data(optimal_paras, optimal_data, config['logger_path'], start_time, 'optimal')
 
@@ -284,10 +290,11 @@ def main(argv):
                                                              simulator, avg_result, plugin,
                                                              valid_data, config['det_used_weight'],
                                                              'newseed')
+                    # newseed_result = fake_simulator(optimal_paras)
                     opt.save_solution_data(optimal_paras, newseed_result[1], config['logger_path'], start_time, 'newseed')
-                    newseed_obj = newseed_result[0][0]
+                    newseed_obj_avg = newseed_result[0][0]
                 else:
-                    newseed_obj = -1.0
+                    newseed_obj_avg = -1.0
 
             end_time = datetime.now()
 
@@ -299,8 +306,10 @@ def main(argv):
                                                              simulator, avg_result, plugin,
                                                              valid_data, config['det_used_weight'],
                                                              'newseed')
+                # newseed_result = fake_simulator(best_para)
                 opt.save_solution_data(best_para, newseed_result[1], config['logger_path'], start_time, 'newseed')
-                newseed_obj = newseed_result[0][0]
+                newseed_obj = newseed_result[0]
+                newseed_obj_avg = newseed_result[0][0]
 
                 cmd.print_cmd(  '\n\n==================== Calibration timeout ===================================')
                 cmd.print_cmd(  '===========================================================================')
@@ -308,17 +317,17 @@ def main(argv):
                 cmd.print_results([ ('default', default_paras),
                                 ('optimal', best_para),
                                 ('newseed', best_para)],
-                              [ ('default', default_obj),
-                                ('optimal', best_obj),
-                                ('newseed', newseed_obj)])
+                              [ ('default', default_obj_avg),
+                                ('optimal', best_obj_avg),
+                                ('newseed', newseed_obj_avg)])
 
             if solved_flag is True:
 
                 cmd.print_results([ ('optimal', optimal_paras),
                                 ('default', default_paras)],
-                              [ ('optimal',optimal_obj),
-                                ('default', default_obj),
-                                ('newseed', newseed_obj)])
+                              [ ('optimal',optimal_obj_avg),
+                                ('default', default_obj_avg),
+                                ('newseed', newseed_obj_avg)])
             else:
                 cmd.print_cmd(  '\n\n====================Calibration timeout===================================')
                 cmd.print_cmd(  '===========================================================================')
@@ -339,24 +348,27 @@ def main(argv):
             console.getLog().addError("Could not open")
 
 
-def parse_config(workzone, thread):
+def parse_config(workzone, thread, top_dir):
 
     config = {}
 
-    config_f = '../{0}_configuration.txt'.format(workzone)
+    config_f = top_dir + '{0}_configuration.txt'.format(workzone)
 
     # parse the file
     with open(config_f) as f:
         for line in f:
+            line = line.strip()
             if len(line) == 0 or line[0] == '#':
                 continue
 
             items = line.strip().split(':')
 
             # three types of values: string, number, and list
-            if items[0] == 'com_dir' or items[0] == 'traffic_state' or  items[0] == 'validFilePath' \
-                or items[0] == 'logger_path' or items[0] == 'start_time_str' \
-                or items[0] == 'end_time_str':
+            if items[0] == 'com_dir' or  items[0] == 'validFilePath' or items[0] == 'logger_path' or \
+                            items[0] == 'start_time_str' or items[0] == 'end_time_str':
+                config[items[0]] = items[1] + ':' + items[2]
+
+            elif items[0] == 'traffic_state':
                 # for all string valued entries
                 config[items[0]] = items[1]
 
@@ -398,14 +410,17 @@ def parse_config(workzone, thread):
                     raise Exception('simulate_xxx can only take these values: True, False')
 
             else:
-                raise Exception('Unrecognized configuration entry')
+                raise Exception('Unrecognized configuration entry: {0}'.format(items[0]))
 
     # specify the folder depending on the thread specification
-    config['sim_para_file'] = config['com_dir'] + thread + 'sim_paras.txt'
-    config['sim_val_file'] = config['com_dir'] + thread + 'sim_val.txt'
-    config['sim_sol_file'] = config['com_dir'] + thread + 'sim_sol.txt'
-    config['validFilePath'] += '{0}/validation_data/'.format(workzone)
-    config['logger_path'] += '{0}/Logs/{1}/'.format(workzone, thread)
+    config['sim_para_file'] = config['com_dir'] + thread + '_sim_paras.txt'
+    config['sim_val_file'] = config['com_dir'] + thread + '_sim_val.txt'
+    config['sim_sol_file'] = config['com_dir'] + thread + '_sim_sol.txt'
+    config['validFilePath'] += '{0}\\validation_data\\'.format(workzone)
+    config['logger_path'] += '{0}\\Logs\\{1}\\'.format(workzone, thread)
+
+    print('sim_para_file: {0}'.format(config['sim_para_file']))
+    print('logger_path: {0}'.format(config['logger_path']))
 
     return config
 
@@ -434,6 +449,21 @@ def load_paras(parafile):
 
     return paras
 
+
+def fake_simulator(paras):
+    """
+    This function is just for debugging the communication with the optimization solver such that we do not have to run
+    the time consuming simulation.
+    :return: (obj_value, sim_data),
+            obj_value = [float, [float]]
+            sim_data = empty dict
+    """
+    v = 0.0
+    for key in paras.keys():
+        # print('paras {0}:{1}'.format(key, paras[key]))
+        v += (paras[key][0]-1.1)**2
+
+    return [[v*100,[v*100]], {}]
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))

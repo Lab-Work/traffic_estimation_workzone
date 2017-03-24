@@ -1,0 +1,8 @@
+car_speedAcceptance:x0,0.1,0.85,1.15 # x0 in [0.85,1.15]
+truck_maxAccel:x1,0.4,0.6,1.8 # x1 in [0.6, 1.8]
+car_sensitivityFactor,x2,0.25,0.75,1.5 # x2 in [0.75,1.5]
+truck_sensitivityFactor,x3,0.25,0.75,1.5 # x3 in [0.75,1.5]
+car_reactionTime,x4,1.2,1.6,1 # x4 in [0.6,1.2]
+truck_reactionTime,x5,1.3,1.7,1 # x5 in [0.6,1.2]
+car_minHeadway,x6,0.5,1.0,2.5 # x6 in [1.0,2.5]
+truck_minHeadway,x7,0.5,1.0,2.5 # x7 in [1.0,2.5]

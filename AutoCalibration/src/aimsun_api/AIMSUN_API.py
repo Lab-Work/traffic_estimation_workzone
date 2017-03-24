@@ -977,7 +977,7 @@ class AimsunApi:
             # tmp_array = np.power(valid_count - avg_count, 2)
             # rms_count += np.sqrt(np.nansum(tmp_array) / sum(~np.isnan(tmp_array)))
 
-        self.cmd_logger.print_cmd('Evaluated objective: average RMSE speed: {0})'.formatrms_speed)
+        self.cmd_logger.print_cmd('Evaluated objective: average RMSE speed: {0})'.format(rms_speed))
 
         return rms_speed, rmse_speeds
 
@@ -1046,18 +1046,18 @@ class CmdLogger:
         :param cmd_logger: the logger for cmd output
         :return:
         """
-        self.cmd_logger.print_cmd('\n\n===========================================================================')
-        self.cmd_logger.print_cmd('====================Calibration Finished===================================')
+        self.print_cmd('\n\n===========================================================================')
+        self.print_cmd('====================Calibration Finished===================================')
         # Forget about beautiful printout. Just log information
-        self.cmd_logger.print_cmd('Parameters: \n')
+        self.print_cmd('Parameters: \n')
         for para in paras_list:
-            self.cmd_logger.print_cmd('---- {0}_paras:'.format(para[0]))
+            self.print_cmd('---- {0}_paras:'.format(para[0]))
             for key in para[1].keys():
-                self.cmd_logger.print_cmd('-------- {0}:    {1}'.format(key, para[1][key]))
+                self.print_cmd('-------- {0}:    {1}'.format(key, para[1][key]))
 
-        self.cmd_logger.print_cmd('\nObjective values: \n')
+        self.print_cmd('\nObjective values: \n')
         for obj_val in obj_val_list:
-            self.cmd_logger.print_cmd('{0} objective value:\n---- RMS_speed: {1}'.format(obj_val[0], obj_val[1]))
+            self.print_cmd('{0} objective value:\n---- RMS_speed: {1}'.format(obj_val[0], obj_val[1]))
 
     def print_opt_steps(self, opt_steps, baseline):
         """
@@ -1067,8 +1067,8 @@ class CmdLogger:
         :param cmd_logger: logger for cmd output
         :return:
         """
-        self.cmd_logger.print_cmd('Optimization steps: {0}'.format(opt_steps))
-        self.cmd_logger.print_cmd('        Optimal by {0} steps: {1} mph, default: {1} mph'.format(len(opt_steps),
+        self.print_cmd('Optimization steps: {0}'.format(opt_steps))
+        self.print_cmd('        Optimal by {0} steps: {1} mph, default: {1} mph'.format(len(opt_steps),
                                                                                                    np.min(opt_steps),
                                                                                                    baseline))
 

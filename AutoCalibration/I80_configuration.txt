@@ -4,15 +4,15 @@
 
 # ---------- File directories ----------
 # Use the following file for communication with the optimizer
-com_dir:E:/sim_opt_com/
+com_dir:E:\sim_opt_com\
 
 # names that should be used in .ang
 #  - demand name: traffic_state + '_demand'
 #  - scenario name: traffic_state
 #  - experiment name: traffic_state + '_exp'
 traffic_state:congflow
-validFilePath:C:/Users/TrafficControl/Dropbox/DesktopServer/Workzone_autocalibration/data/
-logger_path:C:/Users/TrafficControl/Dropbox/DesktopServer/Workzone_autocalibration/data/
+validFilePath:C:\Users\TrafficControl\Dropbox\Code\traffic_estimation_workzone\AutoCalibration\data\
+logger_path:C:\Users\TrafficControl\Dropbox\Code\traffic_estimation_workzone\AutoCalibration\data\
 
 # the file that saved previous simulation result for each optimization step.
 # opt_step_file = 'C:/Users/TrafficControl/Dropbox/DesktopServer/Workzone_autocalibration/I80_EB/Logs/thread1_previous_sim_result.csv'
@@ -29,8 +29,10 @@ main_entrance_discount:1.0
 
 # ---------- Configure seeds ----------
 # Run multiple replications for each set of parameters
-g_num_rep:10
-seed_list:3503,12358,6370,23798,28860,14452,21488,7893,586,30447
+# g_num_rep:10
+# seed_list:3503,12358,6370,23798,28860,14452,21488,7893,586,30447
+g_num_rep:1
+seed_list:3503
 
 # Specify the maximam number of optimization steps
 g_max_iter:1000
