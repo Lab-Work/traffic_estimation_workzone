@@ -157,68 +157,33 @@ import matplotlib.pyplot as plt
 """
 Form I80
 The final calibrated values
-=============== Calib 1 ==============
-Total number of unique steps 1058/1060
-Total number of feasible steps 294/1060
-Optimal parameters with obj: 168.3689373
---- car_speedAcceptance:[1.09, 0.1, 0.85, 1.1]
---- truck_maxAccel:[0.82, 0.5, 0.6, 1.8]
---- car_sensitivityFactor:[0.5, 0.0, 0.5, 0.5]
---- truck_sensitivityFactor:[1.02, 0.0, 1.02, 1.02]
---- car_reactionTime:[0.6, 1.2, 1.6, 1.0]
---- truck_reactionTime:[0.8, 1.3, 1.7, 1.0]
---- car_minHeadway:[1.5, 0.0, 1.5, 1.5]
---- truck_minHeadway:[2.5, 0.0, 2.5, 2.5]
-
-=============== Calib 2 ==============
-Total number of unique steps 1322/1460
-Total number of feasible steps 234/1460
-Optimal parameters with obj: 178.581337235
---- car_speedAcceptance:[1.05, 0.1, 0.85, 1.1]
---- truck_maxAccel:[0.66, 0.5, 0.6, 1.8]
---- car_sensitivityFactor:[0.5, 0.0, 0.5, 0.5]
---- truck_sensitivityFactor:[0.61, 0.0, 0.61, 0.61]
---- car_reactionTime:[1.0, 1.2, 1.6, 1.0]
---- truck_reactionTime:[0.8, 1.3, 1.7, 1.0]
---- car_minHeadway:[1.0, 0.0, 1.0, 1.0]
---- truck_minHeadway:[2.0, 0.0, 2.0, 2.0]
-"""
-
-
-"""
-For I57, optimal parameters
-Total number of unique steps 791/794
-Total number of feasible steps 135/794
-Optimal parameters with obj: 253.74 (default: 377)
---- car_speedAcceptance:[1.1, 0.1, 0.85, 1.1]
---- truck_maxAccel:[0.85, 0.5, 0.6, 1.8]
---- car_sensitivityFactor:[0.61, 0.0, 0.61, 0.61]
---- truck_sensitivityFactor:[0.87, 0.0, 0.87, 0.87]
+Total number of unique steps 1418/1423
+Total number of feasible steps 1418/1423
+Optimal parameters with obj: 166.707495165
+--- car_speedAcceptance:[0.85, 0.1, 0.85, 1.15]
+--- truck_maxAccel:[0.67, 0.4, 0.6, 1.8]
+--- car_sensitivityFactor:[0.75, 0.25, 0.75, 1.5]
+--- truck_sensitivityFactor:[0.81, 0.25, 0.75, 1.5]
 --- car_reactionTime:[0.6, 1.2, 1.6, 1.0]
 --- truck_reactionTime:[0.6, 1.3, 1.7, 1.0]
---- car_minHeadway:[3.0, 0.0, 3.0, 3.0]
---- truck_minHeadway:[4.5, 0.0, 4.5, 4.5]
+--- car_minHeadway:[1.0, 0.5, 1.0, 2.5]
+--- truck_minHeadway:[1.2, 0.5, 1.0, 2.5]
 """
 
 para_bounds = {}
-para_bounds['car_speedAcceptance'] = [0.85, 1.3]
+para_bounds['car_speedAcceptance'] = [0.85, 1.15]
 para_bounds['truck_maxAccel'] = [0.6, 1.8]
-para_bounds['car_sensitivityFactor'] = [0.5, 1.5]
-para_bounds['truck_sensitivityFactor'] = [0.5, 1.5]
+para_bounds['car_sensitivityFactor'] = [0.75, 1.5]
+para_bounds['truck_sensitivityFactor'] = [0.75, 1.5]
 
 para_bounds['car_reactionTime'] = [0.6, 1.6]
 para_bounds['truck_reactionTime'] = [0.6, 1.6]
-para_bounds['car_minHeadway'] = [1.5, 2.0]
-para_bounds['truck_minHeadway'] = [1.5, 2.0]
+para_bounds['car_minHeadway'] = [1.0, 2.5]
+para_bounds['truck_minHeadway'] = [1.0, 2.5]
 
-# print('=============== Calib 2 ==============')
-# solution_file = '/Users/Yanning/Dropbox/DesktopServer/Workzone_autocalibration/I80_EB/' \
-#                 'Logs/Calib1/Calib1_opt_log.csv'
-solution_file = '/Users/Yanning/Dropbox/DesktopServer/Workzone_autocalibration/I57_SB/' \
-                'Logs/I57_800_opt_step.csv'
+solution_file = './I80_opt_log_all.csv'
 
 find_feasible_optimum(solution_file, para_bounds)
-
 
 
 # ========================================================================== #

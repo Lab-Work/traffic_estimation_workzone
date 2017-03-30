@@ -16,7 +16,7 @@ logger_path:C:\Users\TrafficControl\Dropbox\Code\traffic_estimation_workzone\Aut
 
 # the file that saved previous simulation result for each optimization step.
 # opt_step_file = 'C:/Users/TrafficControl/Dropbox/DesktopServer/Workzone_autocalibration/I80_EB/Logs/thread1_previous_sim_result.csv'
-opt_step_file:None
+opt_step_file:C:\Users\TrafficControl\Dropbox\Code\traffic_estimation_workzone\AutoCalibration\data\I80\Logs\20170323_opt_log_all.csv
 
 # ---------- Specify demand ----------
 # Demand can be specified in two ways: traffic states or OD matrix.

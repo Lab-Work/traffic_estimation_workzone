@@ -2,6 +2,7 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
+import time
 np.set_printoptions(linewidth=200)
 from cross_evaluation import CrossEval
 
@@ -15,12 +16,12 @@ Uncomment proper sections to perform each analysis.
 # Configuration for I80 work zone
 # ========================================================================================= #
 workzone = 'I80'
-log_dir = '../'  # parent folder of the src code folder
-data_dir = '../'
-config_file = '../I80_configurations_input.txt'
+log_dir = '/data_fast/Yanning_workzone/'  # parent folder of the src code folder
+data_dir = '/data_fast/Yanning_workzone/'
+config_file = '/data_fast/Yanning_workzone/I80_configurations_input.txt'
 
 # replication ids
-replications = [41368, 41369, 41370, 41371, 41372]
+replications = [41368]
 
 # the estimation grid, (5,50) for linearFILL and fisb, (5,200) for enkf
 estimation_grid = (5, 50)
@@ -37,9 +38,15 @@ cross_eval.load_config(config_file)
 # that has not been estimated before. No need to run if all already generated.
 # ========================================================================================= #
 if False:
-    print('\n\nStart estimation...\n')
+    print('\n\nStart estimation for replication {0}...\n'.format(replications))
+    t0 = time.time()
     cross_eval.fetch_data()
+    t1 = time.time()
+    print('\nFetched all data, took {0} s'.format(t1-t0))
     cross_eval.run_estimators()
+    t2 = time.time()
+    print('\nFinished all estimators, took {0} s'.format(t2-t1))
+
 
 # ========================================================================================= #
 # Visualize the measurements
@@ -129,12 +136,12 @@ if False:
 # ========================================================================================= #
 # Compute the true queue length.
 if False:
-    grids = [(5, 200), (5, 50)]
+    grids = [(5, 50)]
     v_threshold = 17.88
-    replications_to_compute = [41368, 41369, 41370, 41371, 41372]
+    replications_to_compute = [41372]
     for rep in replications_to_compute:
         for grid in grids:
-            # cross_eval.compute_true_queue_for_grid(rep,grid,v_threshold)
+            cross_eval.compute_true_queue_for_grid(rep,grid,v_threshold)
             cross_eval.compute_trueinst_traveltime_for_grid(rep, grid, max_speed=27.2,
                                                             min_speed=1.34)
 
@@ -392,7 +399,6 @@ if False:
                     np.array(errs[alg]) / 60.0,
                     avg_err[alg] / 60.0))
 
-
 # =====================================================================================================
 # Visualization and cross analysis of results
 # =====================================================================================================
@@ -643,10 +649,9 @@ if False:
                                             title='MAE of travel time', figsize=(11, 10), fontsize=[38, 32, 32],
                                             save_fig_name='{0}_{1}_tt.pdf'.format(norm, num_sensors))
 
-
 # ============================================
 # cost - benefit plot
-if True:
+if False:
     plot_speed = True
     plot_speed_aq = True
     plot_queue = True
@@ -729,9 +734,6 @@ if False:
                                          norm='L1', x_axis='alg', xlabel='Number of ensembles',
                                          xticklabels=[i.strip('enkf').strip('AN') for i in algorithms],
                                          unit='imperial', save_fig=False, plot_cost_eff=False)
-
-
-
 
 
 plt.show()

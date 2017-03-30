@@ -231,7 +231,7 @@ def main(argv):
                 else:
                     obj_value_avg = tmp_obj_val_avg
                     obj_value = [obj_value_avg, []]
-                    cmd.print_cmd('Got obj value {0} from previous solutions'.format(tmp_obj_val))
+                    cmd.print_cmd('Got obj value {0} from previous solutions'.format(tmp_obj_val_avg))
 
                 # ======================================================================================================
                 # send simulation value to Optimizor
@@ -398,17 +398,18 @@ def parse_config(workzone, thread, top_dir):
                 for entry in items[1].split((';')):
                     config[items[0]][entry.split(',')[0]] = float(entry.split(',')[1])
 
-            elif items[0] == 'simulate_default' or items[0] == 'simulate_user' or items[0] == 'simulate_newseed' \
-                    or items[0] == 'opt_step_file':
+            elif items[0] == 'simulate_default' or items[0] == 'simulate_user' or items[0] == 'simulate_newseed':
                 if items[1] == 'True':
                     config[items[0]] = True
                 elif items[1] == 'False':
                     config[items[0]] = False
-                elif items[1] == 'None':
-                    config[items[0]] = None
                 else:
                     raise Exception('simulate_xxx can only take these values: True, False')
-
+            elif items[0] == 'opt_step_file':
+                if items[1] == 'None':
+                    config[items[0]] = None
+                else:
+                    config[items[0]] = items[1] + ':' + items[2]
             else:
                 raise Exception('Unrecognized configuration entry: {0}'.format(items[0]))
 

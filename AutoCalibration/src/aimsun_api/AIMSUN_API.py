@@ -1256,7 +1256,8 @@ class Opt:
             items = line.split(';')
 
             # parse each line. first item is the counter, skip
-            for entry in items:
+            for i in range(1, len(items)):
+                entry = items[i]
 
                 key = entry.split(':')[0]
 

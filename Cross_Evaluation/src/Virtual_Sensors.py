@@ -68,7 +68,7 @@ class Virtual_Sensors:
                 self.__true_state_data_folder[rep] = data_dir + 'Estimation_results\\{0}\\rep{1}\\truestate\\'.format(self.__work_zone, rep)
                 self.__virtual_sensors_to_generate_file[rep] = log_dir + 'Virtual_sensor_data\\' +  self.__work_zone + '_' + 'rep{0}'.format(rep)  + '_to_generate.txt'
                 self.__virtual_sensors_generated_file[rep] =  log_dir + 'Virtual_sensor_data\\' +  self.__work_zone + '_' + 'rep{0}'.format(rep)  + '_generated.txt'
-        elif sys.platform == 'darwin' or sys.platform == 'linux2':
+        elif sys.platform == 'darwin' or sys.platform == 'linux2' or sys.platform == 'linux':
             for rep in self.replications:
                 self.__trajectories_file[rep] = data_dir + 'Trajectory_data/' + '{0}_rep{1}.csv'.format(self.__work_zone, rep)
                 self.__virtual_sensors_data_folder[rep] = data_dir + 'Virtual_sensor_data/' + self.__work_zone + '/' + 'rep{0}'.format(rep) + '/'
@@ -203,6 +203,11 @@ class Virtual_Sensors:
         if sensor_parameters['custom']:
             for category in sensor_parameters['custom']:
                 sensor_parameters['default'][category] = sensor_parameters['custom'][category]
+
+        # The eventual structure of sensor parameters
+        # sensor_paras keys -> value: 'type', 'id', 'section', 'distance', ...
+        # sensor_paras keys -> Dict: default, which includes all error metric
+        # sensor_paras keys -> Dict: custom, which keeps a copy of the updated parameters
 
         return self.__compute_sensor_offsets(sensor_parameters)
 
@@ -339,6 +344,7 @@ class Virtual_Sensors:
 
             # read the trajectories file line by line
             with open(self.__trajectories_file[rep], 'r', 1) as traj_file:
+                next(traj_file)
                 for line in traj_file:
                     line = line.split(',')
 
@@ -646,34 +652,57 @@ class Virtual_Sensors:
         :return:
         """
 
-        # obtain noise parameters
+        # ================================================================================================
+        # Obtain noise parameters
+        # Randomly select parameter values from the given interval using uniform distribution to model
+        # different sensor errors (even the same type of sensor) due to calibration and placement error.
+        # ================================================================================================
         random.seed()
-        noise_type, p_occlusion_accept, occlusion_config = \
-            sensor_parameters['default']['noise_type'], \
-            sensor_parameters['default']['p_occlusion_accept'], \
-            sensor_parameters['default']['occlusion']
 
-        aggregation_sec, awake_sec = sensor_parameters['default']['aggregation_sec'], sensor_parameters['default']['awake_sec']
-        v_range, v_threshold = sensor_parameters['default']['v_range'], sensor_parameters['default']['v_threshold']
-        p_missing_ff, p_missing_cf = sensor_parameters['default']['p_missing_ff'], sensor_parameters['default']['p_missing_cf']
+        # Gaussian noise parameters for speed
+        noise_type = sensor_parameters['default']['noise_type']
         if noise_type == 'relative':
             v_bias_ff, v_bias_cf = sensor_parameters['default']['v_bias_ff'], sensor_parameters['default']['v_bias_cf']
-            v_accuracy_p_ff, v_accuracy_p_cf = sensor_parameters['default']['v_accuracy_p_ff'], sensor_parameters['default']['v_accuracy_p_cf']
+            v_accuracy_p_ff, v_accuracy_p_cf = sensor_parameters['default']['v_accuracy_p_ff'], \
+                                               sensor_parameters['default']['v_accuracy_p_cf']
+            curr_v_bias_ff, curr_v_bias_cf = random.uniform(v_bias_ff[0], v_bias_ff[1]), \
+                                             random.uniform(v_bias_cf[0], v_bias_cf[1])
+            curr_v_accuracy_r_ff, curr_v_accuracy_r_cf = random.uniform(v_accuracy_p_ff[0], v_accuracy_p_ff[1])/100, \
+                                                         random.uniform(v_accuracy_p_cf[0], v_accuracy_p_cf[1])/100
         elif noise_type == 'absolute':
-            v_noise_sigma_ff, v_noise_sigma_cf = sensor_parameters['default']['v_noise_sigma_ff'], sensor_parameters['default']['v_noise_sigma_cf']
-            v_noise_mu_ff, v_noise_mu_cf = sensor_parameters['default']['v_noise_mu_ff'], sensor_parameters['default']['v_noise_mu_cf']
+            v_noise_sigma_ff, v_noise_sigma_cf = sensor_parameters['default']['v_noise_sigma_ff'], \
+                                                 sensor_parameters['default']['v_noise_sigma_cf']
+            v_noise_mu_ff, v_noise_mu_cf = sensor_parameters['default']['v_noise_mu_ff'], \
+                                           sensor_parameters['default']['v_noise_mu_cf']
+            curr_v_noise_sigma_ff, curr_v_noise_sigma_cf = random.uniform(v_noise_sigma_ff[0], v_noise_sigma_ff[1]), \
+                                                           random.uniform(v_noise_sigma_cf[0], v_noise_sigma_cf[1])
+            curr_v_noise_mu_ff, curr_v_noise_mu_cf = random.uniform(v_noise_mu_ff[0], v_noise_mu_ff[1]), \
+                                                         random.uniform(v_noise_mu_cf[0], v_noise_mu_cf[1])
+        else:
+            raise Exception('Unrecognized noise type: {0}'.format(noise_type))
 
-
+        # Occlusion model parameters
+        p_occlusion_accept, occlusion_config = sensor_parameters['default']['p_occlusion_accept'], \
+                                               sensor_parameters['default']['occlusion']
         curr_r_occlusion_accept = random.uniform(p_occlusion_accept[0], p_occlusion_accept[1])/100
-        curr_r_missing_ff, curr_r_missing_cf = random.uniform(p_missing_ff[0], p_missing_ff[1])/100, random.uniform(p_missing_cf[0], p_missing_cf[1])/100
 
-        if noise_type == 'relative':
-            curr_v_bias_ff, curr_v_bias_cf = random.uniform(v_bias_ff[0], v_bias_ff[1]), random.uniform(v_bias_cf[0], v_bias_cf[1])
-            curr_v_accuracy_r_ff, curr_v_accuracy_r_cf = random.uniform(v_accuracy_p_ff[0], v_accuracy_p_ff[1])/100, random.uniform(v_accuracy_p_cf[0], v_accuracy_p_cf[1])/100
-        if noise_type == 'absolute':
-            curr_v_noise_sigma_ff, curr_v_noise_sigma_cf = random.uniform(v_noise_sigma_ff[0], v_noise_sigma_ff[1]), random.uniform(v_noise_sigma_cf[0], v_noise_sigma_cf[1])
-            curr_v_noise_mu_ff, curr_v_noise_mu_cf = random.uniform(v_noise_mu_ff[0], v_noise_mu_ff[1]), random.uniform(v_noise_mu_cf[0], v_noise_mu_cf[1])
+        # Operation model parameters. Operate awake_sec over each aggregation_sec cycle
+        aggregation_sec, awake_sec = sensor_parameters['default']['aggregation_sec'], sensor_parameters['default']['awake_sec']
 
+        # Velocity range parameters.
+        v_range, v_threshold = sensor_parameters['default']['v_range'], sensor_parameters['default']['v_threshold']
+
+        # Missing a vehicle parameters.
+        # For RADAR, ICONE, assume miss a vehicle in p_missing probability.
+        # For RTMS, assume there is probability p_missing that miss a vehicle or double count the vehicle
+        p_missveh_ff, p_missveh_cf = sensor_parameters['default']['p_missveh_ff'], sensor_parameters['default']['p_missveh_cf']
+        curr_r_missveh_ff, curr_r_missveh_cf = random.uniform(p_missveh_ff[0], p_missveh_ff[1])/100, random.uniform(p_missveh_cf[0], p_missveh_cf[1])/100
+
+        # Timeout parameter
+        p_timeout_ff, p_timeout_cf = sensor_parameters['default']['p_timeout_ff'], sensor_parameters['default']['p_timeout_cf']
+        curr_r_timeout_ff, curr_r_timeout_cf = random.uniform(p_timeout_ff[0], p_timeout_ff[1])/100, random.uniform(p_timeout_cf[0], p_timeout_cf[1])/100
+
+        # ================================================================================================
         sensor = OrderedDict()
         intervals = aggregation_sec*(np.arange(math.floor(self.__start_timestamp/aggregation_sec),math.floor(self.__end_timestamp/aggregation_sec + 1)) -
                                      math.floor(self.__start_timestamp/aggregation_sec))
@@ -695,42 +724,55 @@ class Virtual_Sensors:
                     # the interval is set based on the enter_timestamp
                     enter_timestamp = veh_cross[0]
                     if (enter_timestamp % aggregation_sec) <= awake_sec:
+
                         # check for occlusion
                         clear_vision = True
                         if lane_idx != 1 and curr_r_occlusion_accept < 1:
                             clear_vision = self.__occlusion_check(crosses, veh_cross, curr_r_occlusion_accept, occlusion_config)
                         if clear_vision:
+                            # if not occluded, proceed to adding this data into aggregated dataset
                             interval = aggregation_sec*(math.floor(enter_timestamp/aggregation_sec) -
                                                         math.floor(self.__start_timestamp/aggregation_sec))
                             if not sensor[interval]['crossed?']:
                                 sensor[interval]['crossed?'] = True
                             speed = veh_cross[4]
-                            # add noise
+
+                            # add Gaussian noise depending on the traffic state: free flow or congested flow
                             if noise_type == 'relative':
                                 if speed >= v_threshold:
-                                    r_missing, v_bias, v_accuracy_r = curr_r_missing_ff, \
-                                                                      curr_v_bias_ff, curr_v_accuracy_r_ff
+                                    v_bias, v_accuracy_r = curr_v_bias_ff, curr_v_accuracy_r_ff
                                 else:
-                                    r_missing, v_bias, v_accuracy_r = curr_r_missing_cf, \
-                                                                      curr_v_bias_cf, curr_v_accuracy_r_cf
-
+                                    v_bias, v_accuracy_r = curr_v_bias_cf, curr_v_accuracy_r_cf
                                 # noisy_speed = abs(random.gauss(speed + v_bias,(1 - v_accuracy_r)*speed))
                                 noisy_speed = abs(random.gauss(speed + v_bias, v_accuracy_r*speed))
                             elif noise_type == 'absolute':
                                 if speed >= v_threshold:
-                                    r_missing, v_noise_mu, v_noise_sigma = curr_r_missing_ff, \
-                                                                           curr_v_noise_mu_ff, curr_v_noise_sigma_ff
+                                    v_noise_mu, v_noise_sigma = curr_v_noise_mu_ff, curr_v_noise_sigma_ff
                                 else:
-                                    r_missing, v_noise_mu, v_noise_sigma = curr_r_missing_cf, \
-                                                                           curr_v_noise_mu_cf, curr_v_noise_sigma_cf
+                                    v_noise_mu, v_noise_sigma = curr_v_noise_mu_cf, curr_v_noise_sigma_cf
                                 noisy_speed = abs(speed + random.gauss(v_noise_mu,v_noise_sigma))
+
+                            # Model missing vehicle and timeout by checking if should retain this vehicle record
+                            if speed >= v_threshold:
+                                r_timeout, r_missveh = curr_r_timeout_ff, curr_r_missveh_ff
+                            else:
+                                r_timeout, r_missveh = curr_r_timeout_cf, curr_r_missveh_cf
+
                             retain_data_check = random.uniform(0, 1)
 
-                            # update data
-                            if v_range[0] <= noisy_speed and noisy_speed <= v_range[1] and retain_data_check >= r_missing:
+                            # Check if speed in detection range and if sensor would miss this vehicle
+                            if (v_range[0] <= noisy_speed <= v_range[1]) and retain_data_check >= r_missveh:
                                 if noisy_speed:
                                     sensor[interval]['inverse_speed_sum'] += 1/noisy_speed
                                 sensor[interval]['count'] += 1
+
+                                # specifically for RTMS sensors, it may double count
+                                if sensor_parameters['type'] == 'rtms' and retain_data_check > 1-r_missveh:
+                                    # register this vehicle again to model the double count error from rtms
+                                    if noisy_speed:
+                                        sensor[interval]['inverse_speed_sum'] += 1/noisy_speed
+                                    sensor[interval]['count'] +=1
+
                                 sensor[interval]['flow'] = int(sensor[interval]['count']*3600/aggregation_sec)
                                 if sensor[interval]['inverse_speed_sum']:
                                     # print( sensor[interval]['inverse_speed_sum'] )
@@ -746,43 +788,45 @@ class Virtual_Sensors:
                 sensor[interval]['density'] = -1
                 sensor[interval]['sms'] = -1
 
-        # drop the data based on the data missing parameter
+        # ================================================================================================
+        # Model missing data (aggregated count and speed) at each time interval due to communication timeout.
+        # ================================================================================================
         for interval in sensor:
-            # if freeflow
             if sensor[interval]['sms'] != -1:
 
-                if sensor[interval]['sms'] >= v_threshold:
-                    r_missing = curr_r_missing_ff
-                    count_bias = random.uniform(sensor_parameters['default']['c_bias_p_ff'][0],
-                                                sensor_parameters['default']['c_bias_p_ff'][1])/100.0
-                    count_std = random.uniform(sensor_parameters['default']['c_sigma_p_ff'][0],
-                                               sensor_parameters['default']['c_sigma_p_ff'][1])/100.0
-                # if congested flow
-                else:
-                    r_missing = curr_r_missing_cf
-                    count_bias = random.uniform(sensor_parameters['default']['c_bias_p_cf'][0],
-                                                sensor_parameters['default']['c_bias_p_cf'][1])/100.0
-                    count_std = random.uniform(sensor_parameters['default']['c_sigma_p_cf'][0],
-                                               sensor_parameters['default']['c_sigma_p_cf'][1])/100.0
+                # if sensor[interval]['sms'] >= v_threshold:
+                #     # if freeflow
+                #     r_missing = curr_r_missing_ff
+                #     count_bias = random.uniform(sensor_parameters['default']['c_bias_p_ff'][0],
+                #                                 sensor_parameters['default']['c_bias_p_ff'][1])/100.0
+                #     count_std = random.uniform(sensor_parameters['default']['c_sigma_p_ff'][0],
+                #                                sensor_parameters['default']['c_sigma_p_ff'][1])/100.0
+                # else:
+                #     # if congested flow
+                #     r_missing = curr_r_missing_cf
+                #     count_bias = random.uniform(sensor_parameters['default']['c_bias_p_cf'][0],
+                #                                 sensor_parameters['default']['c_bias_p_cf'][1])/100.0
+                #     count_std = random.uniform(sensor_parameters['default']['c_sigma_p_cf'][0],
+                #                                sensor_parameters['default']['c_sigma_p_cf'][1])/100.0
 
                 retain_data_check = random.uniform(0,1)
-                if retain_data_check <= r_missing:
+                if retain_data_check <= r_timeout:
                     # throw away data
                     sensor[interval]['sms'] = -1
                     sensor[interval]['count'] = -1
                     sensor[interval]['flow'] = -1
                     sensor[interval]['density'] = -1
 
-                # add count bias and noise into the data set
-                if sensor[interval]['sms'] != -1:
-
-                    tmp_count = random.gauss(sensor[interval]['count']*(1+count_bias),
-                                             sensor[interval]['count']*count_std) 
-                    # put a zero threshold and update the value
-                    tmp_count = np.max([tmp_count, 0])
-
-                    sensor[interval]['count'] = tmp_count
-                    sensor[interval]['flow'] = sensor[interval]['count']*3600/aggregation_sec
+                    # add count bias and noise into the data set
+                    # if sensor[interval]['sms'] != -1:
+                    #
+                    #     tmp_count = random.gauss(sensor[interval]['count']*(1+count_bias),
+                    #                              sensor[interval]['count']*count_std)
+                    #     # put a zero threshold and update the value
+                    #     tmp_count = np.max([sensor[interval]['count'], 0])
+                    #
+                    #     sensor[interval]['count'] = tmp_count
+                    #     sensor[interval]['flow'] = sensor[interval]['count']*3600/aggregation_sec
 
         return sensor
 
@@ -1139,7 +1183,7 @@ class Virtual_Sensors:
         sensor_paras['default']['t_noise_mu'] = [0.0,0.0]
 
         # generate true and measured travel times
-        true_tt_mat = np.full(queue_mat.shape, np.nan)
+        true_tt_mat = np.full(queue_mat.shape, np.nan).astype(float)
         true_pair_readings = self.__build_travel_time_sensor(sensor_paras,
                                                              save2file=False, agg_sec=agg_sec, true_state=True)
         true_tt_mat_with_time = np.array(true_pair_readings[replication]['tt'])

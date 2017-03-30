@@ -29,8 +29,8 @@ BB_OUTPUT_TYPE OBJ EB           # takes in argument the name of
 
 # A set of starting points
 # thread 1
-X0             (100 100 100 100 4 4 15 15)  
-# X0             (100 100 100 100 5 5 20 20)  
+# X0             (100 100 100 100 4 4 15 15)  #converged after 574 iteration, optimal (85,180,75,75,3,3,10,25) 169.359
+X0             (100 100 100 100 5 5 20 20)  
 # X0             (100 100 100 100 5 5 23 23)  
 # X0             (90 100 100 100 5 5 20 20)  
 # X0             (110 100 100 100 5 5 20 20)  

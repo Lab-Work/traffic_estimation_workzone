@@ -44,8 +44,11 @@ Parameters:
     awake_sec                  : Detection phase [s]
     v_range                    : Speed range [kph]
     v_threshold                : Speed threshhold for free flow vs. congested flow [kph]
-    p_missing_ff               : Percent missing range in free flow []
-    p_missing_cf               : Percent missing range in congested flow []
+    p_timeout_ff               : Probability of missing data due to communication timeout in freeflow  [0,100]% (old name p_missing_ff)
+    p_timeout_cf               : Probability of missing data due to communication timeout in congflow  [0,100]% (old name p_missing_cf)
+
+    p_missveh_ff               : Probability of missing data due to communication timeout in freeflow  [0,100] %
+    p_missveh_cf               : Probability of missing data due to communication timeout in congflow  [0,100] %
 
     # Relative Noise Parameters ##
     v_bias_ff                  : Speed bias range in free flow [kph]
@@ -58,13 +61,6 @@ Parameters:
     v_noise_sigma_cf           : Speed noise std. range in congested flow [kph]
     v_noise_mu_ff              : Speed noise mean range in free flow [kph]
     v_noise_mu_cf              : Speed noise mean range in congested flow [kph]
-
-    # Added noise for counts, see the sensor model write up for details ##
-    This is only for RTMS sensor
-    c_bias_p_ff                  : count bias in free flow, [0, 100] %
-    c_sigma_p_ff                 : count standard deviation in free flow, [0, 100] %
-    c_bias_p_cf                  : count bias in free flow, [0, 100] %
-    c_sigma_p_cf                 : count standard deviation in free flow, [0, 100] %
 
 
 
@@ -115,8 +111,10 @@ sensor_paras['IDEAL']['awake_sec'] = 30
 sensor_paras['IDEAL']['occlusion'] = 'False'
 sensor_paras['IDEAL']['p_occlusion_accept'] = [100,100]
 sensor_paras['IDEAL']['v_threshold'] = 0
-sensor_paras['IDEAL']['p_missing_ff'] = [0.0,0.0]
-sensor_paras['IDEAL']['p_missing_cf'] = [0.0,0.0]
+sensor_paras['IDEAL']['p_timeout_ff'] = [0.0,0.0]
+sensor_paras['IDEAL']['p_timeout_cf'] = [0.0,0.0]
+sensor_paras['IDEAL']['p_missveh_ff'] = [0.0,0.0]
+sensor_paras['IDEAL']['p_missveh_cf'] = [0.0,0.0]
 
 
 sensor_paras['IDEAL']['noise_type'] = 'absolute'
@@ -130,54 +128,12 @@ sensor_paras['IDEAL']['v_noise_sigma_ff'] = [0,0]
 sensor_paras['IDEAL']['v_noise_sigma_cf'] = [0,0]
 sensor_paras['IDEAL']['v_noise_mu_ff'] = [0,0]
 sensor_paras['IDEAL']['v_noise_mu_cf'] = [0,0]
-# count relative error
-sensor_paras['IDEAL']['c_bias_p_ff'] = [0, 0]
-sensor_paras['IDEAL']['c_bias_p_cf'] = [0, 0]
-sensor_paras['IDEAL']['c_sigma_p_ff'] = [0, 0]
-sensor_paras['IDEAL']['c_sigma_p_cf'] = [0, 0]
 # --------------------------------- #
 
 
 # =========================================================================================== #
 # ================================== RADAR sensor =========================================== #
 # =========================================================================================== #
-# ------------- RADARI57 ------------- #
-sensor_paras['RADARI57'] = OrderedDict()
-
-sensor_paras['RADARI57']['alpha'] = 84
-sensor_paras['RADARI57']['theta'] = 2
-sensor_paras['RADARI57']['s']= 0.91
-sensor_paras['RADARI57']['L'] = 3.66    # m
-sensor_paras['RADARI57']['offset_dist'] = 43.5   # m
-
-sensor_paras['RADARI57']['v_range'] = [64.37, 159.33]   # kph [40, 99] mph
-sensor_paras['RADARI57']['aggregation_sec'] = 30
-sensor_paras['RADARI57']['awake_sec'] = 30
-
-sensor_paras['RADARI57']['occlusion'] = 'True'
-sensor_paras['RADARI57']['p_occlusion_accept'] = [30,30]
-sensor_paras['RADARI57']['v_threshold'] = 64.37    # kph   40 mph
-sensor_paras['RADARI57']['p_missing_ff'] = [0.0,0.0]
-sensor_paras['RADARI57']['p_missing_cf'] = [100.0,100.0]
-
-sensor_paras['RADARI57']['noise_type'] = 'absolute'
-# relative, NOT used
-sensor_paras['RADARI57']['v_bias_ff']  = [-1,-3]
-sensor_paras['RADARI57']['v_bias_cf'] = [-3,-5]
-sensor_paras['RADARI57']['v_accuracy_p_ff'] = [5,10]
-sensor_paras['RADARI57']['v_accuracy_p_cf'] = [10,20]
-# use absolute error
-sensor_paras['RADARI57']['v_noise_mu_ff'] = [-4.83, -1.61]     # kph [-3, -1] mph
-sensor_paras['RADARI57']['v_noise_mu_cf'] = [-4.83, -1.61]     # kph Not used
-sensor_paras['RADARI57']['v_noise_sigma_ff'] = [0.8, 1.6]   # kph [0.5, 1] mph
-sensor_paras['RADARI57']['v_noise_sigma_cf'] = [4.8, 8.0]    # kph [3. 5] mph
-# count relative error
-sensor_paras['RADARI57']['c_bias_p_ff'] = [0, 0]
-sensor_paras['RADARI57']['c_bias_p_cf'] = [0, 0]
-sensor_paras['RADARI57']['c_sigma_p_ff'] = [0, 0]
-sensor_paras['RADARI57']['c_sigma_p_cf'] = [0, 0]
-# --------------------------------- #
-
 # ------------- RADAR ------------- #
 sensor_paras['RADAR'] = OrderedDict()
 
@@ -194,8 +150,10 @@ sensor_paras['RADAR']['awake_sec'] = 30
 sensor_paras['RADAR']['occlusion'] = 'True'
 sensor_paras['RADAR']['p_occlusion_accept'] = [30,30]
 sensor_paras['RADAR']['v_threshold'] = 64.37    # kph   40 mph
-sensor_paras['RADAR']['p_missing_ff'] = [0.0,0.0]
-sensor_paras['RADAR']['p_missing_cf'] = [13.0, 17.0]
+sensor_paras['RADAR']['p_timeout_ff'] = [0.0,0.0]
+sensor_paras['RADAR']['p_timeout_cf'] = [13.0, 17.0]
+sensor_paras['RADAR']['p_missveh_ff'] = [0.0, 0.0]
+sensor_paras['RADAR']['p_missveh_cf'] = [0.0, 0.0]
 
 sensor_paras['RADAR']['noise_type'] = 'absolute'
 # relative, NOT used
@@ -208,11 +166,6 @@ sensor_paras['RADAR']['v_noise_mu_ff'] = [0, 0]     # kph [-3, -1] mph
 sensor_paras['RADAR']['v_noise_mu_cf'] = [0, 0]     # kph Not used
 sensor_paras['RADAR']['v_noise_sigma_ff'] = [0.8, 1.6]   # kph [0.5, 1] mph
 sensor_paras['RADAR']['v_noise_sigma_cf'] = [4.8, 8.0]    # kph [3, 5] mph
-# count relative error
-sensor_paras['RADAR']['c_bias_p_ff'] = [0, 0]
-sensor_paras['RADAR']['c_bias_p_cf'] = [0, 0]
-sensor_paras['RADAR']['c_sigma_p_ff'] = [0, 0]
-sensor_paras['RADAR']['c_sigma_p_cf'] = [0, 0]
 # --------------------------------- #
 
 # ------------- RADARx2 ------------- #
@@ -231,8 +184,10 @@ sensor_paras['RADARx2']['awake_sec'] = 30
 sensor_paras['RADARx2']['occlusion'] = 'True'
 sensor_paras['RADARx2']['p_occlusion_accept'] = [30,30]
 sensor_paras['RADARx2']['v_threshold'] = 64.37    # kph   40 mph
-sensor_paras['RADARx2']['p_missing_ff'] = [0.0,0.0]
-sensor_paras['RADARx2']['p_missing_cf'] = [6.5, 8.5]
+sensor_paras['RADARx2']['p_timeout_ff'] = [0.0,0.0]
+sensor_paras['RADARx2']['p_timeout_cf'] = [6.5, 8.5]
+sensor_paras['RADARx2']['p_missveh_ff'] = [0.0, 0.0]
+sensor_paras['RADARx2']['p_missveh_cf'] = [0.0, 0.0]
 
 sensor_paras['RADARx2']['noise_type'] = 'absolute'
 # relative, NOT used
@@ -245,11 +200,6 @@ sensor_paras['RADARx2']['v_noise_mu_ff'] = [0, 0]     # kph
 sensor_paras['RADARx2']['v_noise_mu_cf'] = [0, 0]     # kph Not used
 sensor_paras['RADARx2']['v_noise_sigma_ff'] = [0.4, 0.8]   # kph
 sensor_paras['RADARx2']['v_noise_sigma_cf'] = [2.4, 4.0]    # kph
-# count relative error
-sensor_paras['RADARx2']['c_bias_p_ff'] = [0, 0]
-sensor_paras['RADARx2']['c_bias_p_cf'] = [0, 0]
-sensor_paras['RADARx2']['c_sigma_p_ff'] = [0, 0]
-sensor_paras['RADARx2']['c_sigma_p_cf'] = [0, 0]
 # --------------------------------- #
 
 
@@ -269,8 +219,10 @@ sensor_paras['RADARx4']['awake_sec'] = 30
 sensor_paras['RADARx4']['occlusion'] = 'True'
 sensor_paras['RADARx4']['p_occlusion_accept'] = [30,30]
 sensor_paras['RADARx4']['v_threshold'] = 64.37    # kph   40 mph
-sensor_paras['RADARx4']['p_missing_ff'] = [0.0,0.0]
-sensor_paras['RADARx4']['p_missing_cf'] = [3.0, 4.0]
+sensor_paras['RADARx4']['p_timeout_ff'] = [0.0,0.0]
+sensor_paras['RADARx4']['p_timeout_cf'] = [3.0, 4.0]
+sensor_paras['RADARx4']['p_missveh_ff'] = [0.0, 0.0]
+sensor_paras['RADARx4']['p_missveh_cf'] = [0.0, 0.0]
 
 sensor_paras['RADARx4']['noise_type'] = 'absolute'
 # relative, NOT used
@@ -283,11 +235,6 @@ sensor_paras['RADARx4']['v_noise_mu_ff'] = [0, 0]     # kph
 sensor_paras['RADARx4']['v_noise_mu_cf'] = [0, 0]     # kph Not used
 sensor_paras['RADARx4']['v_noise_sigma_ff'] = [0.2, 0.4]   # kph
 sensor_paras['RADARx4']['v_noise_sigma_cf'] = [1.2, 2.0]    # kph
-# count relative error
-sensor_paras['RADARx4']['c_bias_p_ff'] = [0, 0]
-sensor_paras['RADARx4']['c_bias_p_cf'] = [0, 0]
-sensor_paras['RADARx4']['c_sigma_p_ff'] = [0, 0]
-sensor_paras['RADARx4']['c_sigma_p_cf'] = [0, 0]
 # --------------------------------- #
 
 
@@ -307,8 +254,10 @@ sensor_paras['RADARx8']['awake_sec'] = 30
 sensor_paras['RADARx8']['occlusion'] = 'True'
 sensor_paras['RADARx8']['p_occlusion_accept'] = [30,30]
 sensor_paras['RADARx8']['v_threshold'] = 64.37    # kph   40 mph
-sensor_paras['RADARx8']['p_missing_ff'] = [0.0,0.0]
-sensor_paras['RADARx8']['p_missing_cf'] = [1.5, 2]
+sensor_paras['RADARx8']['p_timeout_ff'] = [0.0,0.0]
+sensor_paras['RADARx8']['p_timeout_cf'] = [1.5, 2]
+sensor_paras['RADARx8']['p_missveh_ff'] = [0.0, 0.0]
+sensor_paras['RADARx8']['p_missveh_cf'] = [0.0, 0.0]
 
 sensor_paras['RADARx8']['noise_type'] = 'absolute'
 # relative, NOT used
@@ -321,57 +270,22 @@ sensor_paras['RADARx8']['v_noise_mu_ff'] = [0, 0]     # kph
 sensor_paras['RADARx8']['v_noise_mu_cf'] = [0, 0]     # kph Not used
 sensor_paras['RADARx8']['v_noise_sigma_ff'] = [0.1, 0.2]   # kph
 sensor_paras['RADARx8']['v_noise_sigma_cf'] = [0.6, 1.0]    # kph
-# count relative error
-sensor_paras['RADARx8']['c_bias_p_ff'] = [0, 0]
-sensor_paras['RADARx8']['c_bias_p_cf'] = [0, 0]
-sensor_paras['RADARx8']['c_sigma_p_ff'] = [0, 0]
-sensor_paras['RADARx8']['c_sigma_p_cf'] = [0, 0]
 # --------------------------------- #
 
 
 # =========================================================================================== #
 # ================================== RTMS sensor ============================================ #
 # =========================================================================================== #
-# ------------- RTMSI57 -------------- #
-sensor_paras['RTMSI57'] = OrderedDict()
-
-# RTMS is mounted high and aims perpendicular to the road, hence there is no occlusion.
-sensor_paras['RTMSI57']['alpha'] = 0
-sensor_paras['RTMSI57']['theta'] = 0
-sensor_paras['RTMSI57']['s']= 0.91
-sensor_paras['RTMSI57']['L'] = 3.66
-sensor_paras['RTMSI57']['offset_dist'] = 0.0    # m
-
-sensor_paras['RTMSI57']['v_range'] = [0,160.93]    # kph   [0, 100] MPH
-sensor_paras['RTMSI57']['awake_sec'] = 30
-sensor_paras['RTMSI57']['aggregation_sec'] = 30
-
-sensor_paras['RTMSI57']['occlusion'] = 'False'
-sensor_paras['RTMSI57']['p_occlusion_accept'] = [100,100]
-sensor_paras['RTMSI57']['v_threshold'] = 80.47     # ~50 mph
-sensor_paras['RTMSI57']['p_missing_ff'] = [0.0, 0.0]     # %
-sensor_paras['RTMSI57']['p_missing_cf'] = [2.0, 4.0]     # %
-
-sensor_paras['RTMSI57']['noise_type'] = 'relative'
-# relative
-sensor_paras['RTMSI57']['v_bias_ff']  = [3.2, 8.0]
-sensor_paras['RTMSI57']['v_bias_cf'] = [8.0, 12.0]    # kph [5, 7.5] mph
-sensor_paras['RTMSI57']['v_accuracy_p_ff'] = [8, 12]
-sensor_paras['RTMSI57']['v_accuracy_p_cf'] = [12, 18]
-# absolute
-sensor_paras['RTMSI57']['v_noise_mu_ff'] = [0, 0]
-sensor_paras['RTMSI57']['v_noise_mu_cf'] = [0, 0]
-sensor_paras['RTMSI57']['v_noise_sigma_ff'] = [0, 0]
-sensor_paras['RTMSI57']['v_noise_sigma_cf'] = [0, 0]
-# count relative error
-sensor_paras['RTMSI57']['c_bias_p_ff'] = [0, 0]
-sensor_paras['RTMSI57']['c_bias_p_cf'] = [0, 0]
-sensor_paras['RTMSI57']['c_sigma_p_ff'] = [3, 7]
-sensor_paras['RTMSI57']['c_sigma_p_cf'] = [7, 13]
-# --------------------------------- #
-
-
 # ------------- RTMS -------------- #
+# For RTMS counting error
+# given the detection of each vehicle, there is probability p that RTMS missed the car or double counted the car
+# According to manual, RTMS achieves 5% accuracy every 50 counts.
+# Given p, the resulting counts subject to normal like distribution
+# p = 6% ==> std = 2.45 ==> 2sigma is 45.1~54.9, which is roughly 10%
+# p = 1.6% ==> std = 1.25 ==> 2sigma is 47.5~52.5, which is roughly 5%
+# p = 0.4% ==> std = 0.63 ==> 2sigma is 48.75~51.25, which is roughly 2.5% error
+# p = 0.1%  ==> std = 0.31 ==> 2sigma is 49.375~50.625, which is roughly 1.25% error
+# p = 0.025%  ==> std = 0.15 ==> 2sigma is 49.7~50.3, which is roughly 0.6% error
 sensor_paras['RTMS'] = OrderedDict()
 
 sensor_paras['RTMS']['alpha'] = 0
@@ -387,12 +301,14 @@ sensor_paras['RTMS']['aggregation_sec'] = 30
 sensor_paras['RTMS']['occlusion'] = 'False'
 sensor_paras['RTMS']['p_occlusion_accept'] = [100,100]
 sensor_paras['RTMS']['v_threshold'] = 64.37    # kph   40 mph
-sensor_paras['RTMS']['p_missing_ff'] = [0.0, 0.0]     # %
-sensor_paras['RTMS']['p_missing_cf'] = [2.0, 4.0]     # %
+sensor_paras['RTMS']['p_timeout_ff'] = [0.0, 0.0]
+sensor_paras['RTMS']['p_timeout_cf'] = [2.0, 4.0]
+sensor_paras['RTMS']['p_missveh_ff'] = [1.52, 1.68]
+sensor_paras['RTMS']['p_missveh_cf'] = [5.7, 6.3]
 
 sensor_paras['RTMS']['noise_type'] = 'relative'
 # relative
-sensor_paras['RTMS']['v_bias_ff']  = [0, 0]
+sensor_paras['RTMS']['v_bias_ff'] = [0, 0]
 sensor_paras['RTMS']['v_bias_cf'] = [0, 0]
 sensor_paras['RTMS']['v_accuracy_p_ff'] = [8, 12]
 sensor_paras['RTMS']['v_accuracy_p_cf'] = [12, 18]
@@ -401,11 +317,6 @@ sensor_paras['RTMS']['v_noise_mu_ff'] = [0, 0]
 sensor_paras['RTMS']['v_noise_mu_cf'] = [0, 0]
 sensor_paras['RTMS']['v_noise_sigma_ff'] = [0, 0]
 sensor_paras['RTMS']['v_noise_sigma_cf'] = [0, 0]
-# count relative error
-sensor_paras['RTMS']['c_bias_p_ff'] = [0, 0]
-sensor_paras['RTMS']['c_bias_p_cf'] = [0, 0]
-sensor_paras['RTMS']['c_sigma_p_ff'] = [3, 7]
-sensor_paras['RTMS']['c_sigma_p_cf'] = [7, 13]
 # --------------------------------- #
 
 
@@ -425,8 +336,10 @@ sensor_paras['RTMSx2']['aggregation_sec'] = 30
 sensor_paras['RTMSx2']['occlusion'] = 'False'
 sensor_paras['RTMSx2']['p_occlusion_accept'] = [100,100]
 sensor_paras['RTMSx2']['v_threshold'] = 64.37    # kph   40 mph
-sensor_paras['RTMSx2']['p_missing_ff'] = [0.0, 0.0]     # %
-sensor_paras['RTMSx2']['p_missing_cf'] = [1.0, 2.0]     # %
+sensor_paras['RTMSx2']['p_timeout_ff'] = [0.0, 0.0]     # %
+sensor_paras['RTMSx2']['p_timeout_cf'] = [1.0, 2.0]     # %
+sensor_paras['RTMSx2']['p_missveh_ff'] = [0.38, 0.42]     # %
+sensor_paras['RTMSx2']['p_missveh_cf'] = [1.52, 1.68]     # %
 
 sensor_paras['RTMSx2']['noise_type'] = 'relative'
 # relative
@@ -439,13 +352,7 @@ sensor_paras['RTMSx2']['v_noise_mu_ff'] = [0, 0]
 sensor_paras['RTMSx2']['v_noise_mu_cf'] = [0, 0]
 sensor_paras['RTMSx2']['v_noise_sigma_ff'] = [0, 0]
 sensor_paras['RTMSx2']['v_noise_sigma_cf'] = [0, 0]
-# count relative error
-sensor_paras['RTMSx2']['c_bias_p_ff'] = [0, 0]
-sensor_paras['RTMSx2']['c_bias_p_cf'] = [0, 0]
-sensor_paras['RTMSx2']['c_sigma_p_ff'] = [1.5, 3.5]
-sensor_paras['RTMSx2']['c_sigma_p_cf'] = [3.5, 6.5]
 # --------------------------------- #
-
 
 
 # ------------- RTMSx4 -------------- #
@@ -464,8 +371,10 @@ sensor_paras['RTMSx4']['aggregation_sec'] = 30
 sensor_paras['RTMSx4']['occlusion'] = 'False'
 sensor_paras['RTMSx4']['p_occlusion_accept'] = [100,100]
 sensor_paras['RTMSx4']['v_threshold'] = 64.37    # kph   40 mph
-sensor_paras['RTMSx4']['p_missing_ff'] = [0.0, 0.0]     # %
-sensor_paras['RTMSx4']['p_missing_cf'] = [0.5, 1.0]     # %
+sensor_paras['RTMSx4']['p_timeout_ff'] = [0.0, 0.0]     # %
+sensor_paras['RTMSx4']['p_timeout_cf'] = [0.5, 1.0]     # %
+sensor_paras['RTMSx4']['p_missveh_ff'] = [0.095, 0.105]     # %
+sensor_paras['RTMSx4']['p_missveh_cf'] = [0.38, 0.42]     # %
 
 sensor_paras['RTMSx4']['noise_type'] = 'relative'
 # relative
@@ -478,11 +387,6 @@ sensor_paras['RTMSx4']['v_noise_mu_ff'] = [0, 0]
 sensor_paras['RTMSx4']['v_noise_mu_cf'] = [0, 0]
 sensor_paras['RTMSx4']['v_noise_sigma_ff'] = [0, 0]
 sensor_paras['RTMSx4']['v_noise_sigma_cf'] = [0, 0]
-# count relative error
-sensor_paras['RTMSx4']['c_bias_p_ff'] = [0, 0]
-sensor_paras['RTMSx4']['c_bias_p_cf'] = [0, 0]
-sensor_paras['RTMSx4']['c_sigma_p_ff'] = [0.75, 1.75]
-sensor_paras['RTMSx4']['c_sigma_p_cf'] = [1.75, 3.25]
 # --------------------------------- #
 
 # ------------- RTMSx8 -------------- #
@@ -501,8 +405,10 @@ sensor_paras['RTMSx8']['aggregation_sec'] = 30
 sensor_paras['RTMSx8']['occlusion'] = 'False'
 sensor_paras['RTMSx8']['p_occlusion_accept'] = [100,100]
 sensor_paras['RTMSx8']['v_threshold'] = 64.37    # kph   40 mph
-sensor_paras['RTMSx8']['p_missing_ff'] = [0.0, 0.0]     # %
-sensor_paras['RTMSx8']['p_missing_cf'] = [0.25, 0.5]     # %
+sensor_paras['RTMSx8']['p_timeout_ff'] = [0.0, 0.0]     # %
+sensor_paras['RTMSx8']['p_timeout_cf'] = [0.25, 0.5]     # %
+sensor_paras['RTMSx8']['p_missveh_ff'] = [0.0238, 0.0263]     # %
+sensor_paras['RTMSx8']['p_missveh_cf'] = [0.095, 0.105]     # %
 
 sensor_paras['RTMSx8']['noise_type'] = 'relative'
 # relative
@@ -515,11 +421,6 @@ sensor_paras['RTMSx8']['v_noise_mu_ff'] = [0, 0]
 sensor_paras['RTMSx8']['v_noise_mu_cf'] = [0, 0]
 sensor_paras['RTMSx8']['v_noise_sigma_ff'] = [0, 0]
 sensor_paras['RTMSx8']['v_noise_sigma_cf'] = [0, 0]
-# count relative error
-sensor_paras['RTMSx8']['c_bias_p_ff'] = [0, 0]
-sensor_paras['RTMSx8']['c_bias_p_cf'] = [0, 0]
-sensor_paras['RTMSx8']['c_sigma_p_ff'] = [0.375, 0.875]
-sensor_paras['RTMSx8']['c_sigma_p_cf'] = [0.875, 1.625]
 # --------------------------------- #
 
 
@@ -543,8 +444,10 @@ sensor_paras['ICONE']['awake_sec'] = 30
 sensor_paras['ICONE']['occlusion'] = 'True'
 sensor_paras['ICONE']['p_occlusion_accept'] = [30,30]
 sensor_paras['ICONE']['v_threshold'] = 64.37    # kph   40 mph
-sensor_paras['ICONE']['p_missing_ff'] = [0.0,0.0]
-sensor_paras['ICONE']['p_missing_cf'] = [13.0,17.0]
+sensor_paras['ICONE']['p_timeout_ff'] = [0.0,0.0]
+sensor_paras['ICONE']['p_timeout_cf'] = [13.0,17.0]
+sensor_paras['ICONE']['p_missveh_ff'] = [0.0,0.0]
+sensor_paras['ICONE']['p_missveh_cf'] = [0.0,0.0]
 
 sensor_paras['ICONE']['noise_type'] = 'absolute'
 # relative
@@ -556,12 +459,7 @@ sensor_paras['ICONE']['v_accuracy_p_cf'] = [0, 0]
 sensor_paras['ICONE']['v_noise_mu_ff'] = [0, 0]       # kph
 sensor_paras['ICONE']['v_noise_mu_cf'] = [0, 0]
 sensor_paras['ICONE']['v_noise_sigma_ff'] = [0.8, 1.6]    # kph
-sensor_paras['ICONE']['v_noise_sigma_cf'] = [4.8, 8.0]       # kph  in literature was [40, 50] mph
-# count relative error
-sensor_paras['ICONE']['c_bias_p_ff'] = [0, 0]
-sensor_paras['ICONE']['c_bias_p_cf'] = [0, 0]
-sensor_paras['ICONE']['c_sigma_p_ff'] = [0, 0]
-sensor_paras['ICONE']['c_sigma_p_cf'] = [0, 0]
+sensor_paras['ICONE']['v_noise_sigma_cf'] = [4.8, 8.0]    # kph  in literature was [40, 50] mph
 # --------------------------------- #
 
 
@@ -581,8 +479,10 @@ sensor_paras['ICONEx2']['awake_sec'] = 30
 sensor_paras['ICONEx2']['occlusion'] = 'True'
 sensor_paras['ICONEx2']['p_occlusion_accept'] = [30,30]
 sensor_paras['ICONEx2']['v_threshold'] = 64.37    # kph
-sensor_paras['ICONEx2']['p_missing_ff'] = [0.0,0.0]
-sensor_paras['ICONEx2']['p_missing_cf'] = [6.5,8.5]
+sensor_paras['ICONEx2']['p_timeout_ff'] = [0.0,0.0]
+sensor_paras['ICONEx2']['p_timeout_cf'] = [6.5,8.5]
+sensor_paras['ICONEx2']['p_missveh_ff'] = [0.0,0.0]
+sensor_paras['ICONEx2']['p_missveh_cf'] = [0.0,0.0]
 
 sensor_paras['ICONEx2']['noise_type'] = 'absolute'
 # relative
@@ -595,11 +495,6 @@ sensor_paras['ICONEx2']['v_noise_mu_ff'] = [0.0, 0.0]       # kph
 sensor_paras['ICONEx2']['v_noise_mu_cf'] = [0.0, 0.0]
 sensor_paras['ICONEx2']['v_noise_sigma_ff'] = [0.4, 0.8]    # kph
 sensor_paras['ICONEx2']['v_noise_sigma_cf'] = [2.4, 4.0]       # kph  in literature was [40, 50] mph
-# count relative error
-sensor_paras['ICONEx2']['c_bias_p_ff'] = [0, 0]
-sensor_paras['ICONEx2']['c_bias_p_cf'] = [0, 0]
-sensor_paras['ICONEx2']['c_sigma_p_ff'] = [0, 0]
-sensor_paras['ICONEx2']['c_sigma_p_cf'] = [0, 0]
 # --------------------------------- #
 
 

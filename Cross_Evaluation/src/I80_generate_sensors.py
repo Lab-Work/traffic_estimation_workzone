@@ -13,8 +13,8 @@ This script generates the virtual sensor data.
 # =========================================================================================== #
 # set the folders and directories
 workzone = 'I80'
-log_dir = '../'
-data_dir = '../'
+log_dir = '/data_fast/Yanning_workzone/'
+data_dir = '/data_fast/Yanning_workzone/'
 
 # --------------------------------
 # configure to select which road network configuration
@@ -42,7 +42,7 @@ offset_secs = np.concatenate([[0], np.cumsum(np.array(len_secs))])
 
 # --------------------------------
 # configure the replication
-rep = 41368
+rep = 41372
 
 # --------------------------------
 # configure the sensors sensing locations
@@ -56,15 +56,20 @@ distance = [round(i, 2) for i in distance]  # round to 2 decimals
 
 # --------------------------------
 # configure sensors
+# sensors_to_generate = ['IDEAL', 'RTMS', 'RTMSx2', 'RTMSx4', 'RTMSx8',
+#                        'RADAR', 'RADARx2', 'RADARx4', 'RADARx8',
+#                        'ICONE', 'ICONEx2']
+# sensors_to_generate = ['IDEAL',
+#                        'RADAR', 'RADARx2', 'RADARx4', 'RADARx8',
+#                        'ICONE', 'ICONEx2']
 sensors_to_generate = ['IDEAL', 'RTMS', 'RTMSx2', 'RTMSx4', 'RTMSx8',
-                       'RADAR', 'RADARx2', 'RADARx4', 'RADARx8',
-                       'ICONE', 'ICONEx2']
+                       'RADAR','RADARx2', 'RADARx4', 'RADARx8','ICONE', 'ICONEx2']
 
 update_file = True
 generate_data = True
 
 if update_file is True:
-    f = open('../Virtual_sensor_data/{0}_rep{1}_to_generate.txt'.format(workzone, rep), 'w+')
+    f = open(log_dir+'Virtual_sensor_data/{0}_rep{1}_to_generate.txt'.format(workzone, rep), 'w+')
 
 # =========================================================================================== #
 # ============================ Finished configuration ======================================= #
@@ -386,7 +391,7 @@ if update_file is True:
 # Generate the virual sensor data
 if generate_data is True:
     cross_eval = CrossEval(workzone=workzone, log_dir=log_dir, data_dir=data_dir,
-                            grid_res=(5, 200), replications=[rep])
+                            grid_res=(5, 50), replications=[rep])
 
     # fetch all data needed for the evaluation
     cross_eval.just_fetch()

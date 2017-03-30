@@ -5,7 +5,6 @@ This is the post calibration class and static functions.
     measured speed, using the default parameters, the optimal parameters, etc.
     - It visualizes the high-dimension parallel plot of the optimization steps.
     - It visualizes the sensitivity analysis results.
-
 """
 
 
@@ -797,27 +796,21 @@ def load_previous_opt_solutions(opt_step_file):
         paras = OrderedDict()
 
         line = line.strip()
-        items = line.split(',')
+        items = line.split(';')
 
         # parse each line. first item is the counter, skip
-        for i in range(1,len(items)):
+        for i in range(1, len(items)):
+            entry = items[i]
 
-            # a key
-            if not __isNumber(items[i]):
-                if items[i] == 'RMS':
-                    # get the objective value and continue
-                    obj_val = [float(items[i+1]), float(items[i+2]) ]
-                    break
-                else:
-                    # register key
-                    key_name = items[i]
-                    paras[key_name] = []
+            key = entry.split(':')[0]
 
+            if key == 'RMSE_avg':
+                obj_val = float(entry.split(':')[1])
+            elif key == 'RMSEs':
+                continue
             else:
-                # a number, append to the latest key
-                paras[key_name].append(float(items[i]))
-
-        # print_cmd('loaded paras: {0}'.format(paras))
+                # the parameters
+                paras[key] = [float(v) for v in entry.split(':')[1].split(',')]
 
         paras_list.append(paras)
         obj_value_list.append(obj_val)
@@ -954,21 +947,20 @@ def find_feasible_optimum(opt_step_file, para_bounds):
                 continue
 
             # only consider the speed RMSE
-            if val[0] < optimal_val:
+            if val < optimal_val:
                 optimal_para = para_set
-                optimal_val = val[0]
-            elif val[0] == optimal_val:
+                optimal_val = val
+            elif val == optimal_val:
                 print('Warning: two sets of parameters achieving same objective values')
+                print('Another set of paras with obj:{0}'.format(val))
+                for para_name in para_set:
+                    print('--- {0}:{1}'.format(para_name, para_set[para_name]))
 
     print('Total number of unique steps {0}/{1}'.format(len(unique_paras), len(step_paras)))
     print('Total number of feasible steps {0}/{1}'.format(num_feasible, len(step_paras)))
     print('Optimal parameters with obj: {0}'.format(optimal_val))
     for para_name in optimal_para:
         print('--- {0}:{1}'.format(para_name, optimal_para[para_name]))
-
-
-
-
 
 
 

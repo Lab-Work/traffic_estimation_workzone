@@ -11,16 +11,12 @@ blank line. Each block includes a specific sensor network configuration and algo
 """
 
 # =========================================================================================== #
-# ======================== Generate I80 Configuration ======================================= #
+# ============================== Generate I80 Configuration ================================= #
 # =========================================================================================== #
 
 directory = os.path.dirname(os.path.realpath(__file__))
-if sys.platform == 'win32':
-    f = open(directory + '\\..\\I80_configurations_input.txt', 'w+')
-elif sys.platform == 'darwin':
-    f = open(directory + '/../I80_configurations_input.txt', 'w+')
-else:
-    raise Exception('Unrecognized operation system.')
+log_dir = '/data_fast/Yanning_workzone/'
+f = open(log_dir+'I80_configurations_input.txt', 'w+')
 
 # ===================================================
 # Configure the I80 network
@@ -74,7 +70,7 @@ def __get_relative_loc(dist):
 # ================================================================ #
 # ===================== The I80 BAU deployment =================== #
 # ================================================================ #
-if True:
+if False:
 
     algorithms = ['linearFILL', 'fisb', 'enkfANupdated']
 
@@ -159,11 +155,13 @@ if True:
 # ================================================================ #
 # =================== Other configurations ======================= #
 # ================================================================ #
-if False:
+if True:
 
     # ================================================
     # the complete set of algorithms to evaluate
-    algorithms = ['linearFILL', 'fisb', 'enkfANupdated']
+    # algorithms = ['linearFILL', 'fisb', 'enkfANupdated']
+    # algorithms = ['linearFILL', 'fisb']
+    algorithms = ['enkfANupdated']
 
     # ================================================
     # The complete set of num_sensors to generate
@@ -171,8 +169,10 @@ if False:
 
     # ================================================
     # the complete set of types of sensors to generate
+    # sensor_types = ['IDEAL', 'RADAR', 'RADARx2', 'RADARx4', 'RADARx8',
+    #                 'RTMS', 'RTMSx2', 'RTMSx4', 'RTMSx8', 'ICONE', 'ICONEx2']
     sensor_types = ['IDEAL', 'RADAR', 'RADARx2', 'RADARx4', 'RADARx8',
-                    'RTMS', 'RTMSx2', 'RTMSx4', 'RTMSx8', 'ICONE', 'ICONEx2']
+                    'ICONE', 'ICONEx2']
 
     # ================================================
     # Generate the configuration file

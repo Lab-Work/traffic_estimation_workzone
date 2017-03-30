@@ -6,7 +6,6 @@ import time
 from collections import OrderedDict
 from copy import deepcopy
 from os.path import exists
-
 import matplotlib.colors as colors
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -64,7 +63,7 @@ class CrossEval:
         # self.sections and self.fwy_sec_order are used to convert the relative location on sections to the
         # absolute location
         self.time_grid, self.space_grid, self.workzone_topo, self.__aimsun_start_dur_step = \
-            self.__load_workzone(log_dir + self.workzone + '_topology_{0}.txt'.format(replications[0]))
+            self.__load_workzone(log_dir + self.workzone + '_topology.txt')
 
         # the replications to estimate on
         if replications == 'all':
@@ -88,7 +87,7 @@ class CrossEval:
         self.__truestate_result_dir = OrderedDict()
         for rep in self.active_replications:
 
-            if sys.platform == 'darwin' or sys.platform == 'linux2':
+            if sys.platform == 'darwin' or sys.platform == 'linux2' or sys.platform == 'linux':
                 # Mac directory or linux directory
                 self.__sensor_data_log[rep] = log_dir + 'Virtual_sensor_data/{0}_rep{1}_generated.txt'.format(
                     self.workzone, rep)
@@ -581,7 +580,7 @@ class CrossEval:
                         # update the configuration_log
                         with open(self.__result_log[rep], 'a+') as f_log:
                             f_log.write('{0}&{1}\n'.format(config_id, alg_id))
-                        f_log.close()
+
 
     # ================================================================================ #
     # private functions used for running estimators
