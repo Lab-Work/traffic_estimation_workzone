@@ -42,7 +42,7 @@ offset_secs = np.concatenate([[0], np.cumsum(np.array(len_secs))])
 
 # --------------------------------
 # configure the replication
-rep = 41372
+rep = 41377
 
 # --------------------------------
 # configure the sensors sensing locations

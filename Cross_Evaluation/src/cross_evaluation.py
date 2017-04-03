@@ -502,6 +502,7 @@ class CrossEval:
                 with open(self.__result_log[rep], 'r') as f_log:
                     # find out the id of each configuration
                     for line in f_log:
+                        line = line.strip()
                         if len(line) == 0 or line[0] == '#':
                             continue
                         else:
@@ -574,8 +575,8 @@ class CrossEval:
                         # Use a standard method for computing the queueu and travel time.
                         self.compute_queue_for_scenario(rep, config_id, alg_id,
                                                         self.all_config[config_id]['algorithms'][alg_id][
-                                                            'queue_threshold'])
-                        self.compute_traveltime_for_scenario(rep, config_id, alg_id)
+                                                            'queue_threshold'], estimate_grid=self.grid_res)
+                        self.compute_traveltime_for_scenario(rep, config_id, alg_id, estimation_grid=self.grid_res)
 
                         # update the configuration_log
                         with open(self.__result_log[rep], 'a+') as f_log:
@@ -2309,7 +2310,7 @@ class CrossEval:
                     if plot_style == 'bar':
                         loc = loc_interpolation
                         col = 'r'
-                        print('current color interpolation: {0}'.format(col))
+                        # print('current color interpolation: {0}'.format(col))
                         rect_interpolation = ax.bar(loc, err_queue[key], width, color=col, hatch='/')
                 elif 'fisb' in key:
                     label = 'Spatio-temporal'
@@ -3250,7 +3251,7 @@ class CrossEval:
         if mat.shape[0] != shape[0] and mat.shape[1] == shape[1]:
             mat_expanded = np.array([]).reshape(0, mat.shape[1])
             # only duplicate rows
-            num_dup = shape[0] / mat.shape[0]
+            num_dup = int(shape[0] / mat.shape[0])
             for row in range(0, mat.shape[0]):
                 for i in range(0, num_dup):
                     mat_expanded = np.vstack([mat_expanded, mat[row, :].reshape(1, mat.shape[1])])
@@ -3260,7 +3261,7 @@ class CrossEval:
             mat_expanded = np.array([]).reshape(mat.shape[0], 0)
 
             # only duplicate cols
-            num_dup = shape[1] / mat.shape[1]
+            num_dup = int(shape[1] / mat.shape[1])
             for col in range(0, mat.shape[1]):
                 for i in range(0, num_dup):
                     # print('mat_expanded:{0}; mat[:,col].shape {1}'.format(mat_expanded.shape,
@@ -3271,14 +3272,14 @@ class CrossEval:
         elif mat.shape[0] != shape[0] and mat.shape[1] == shape[1]:
             mat_tmp = np.array([]).reshape(0, mat.shape[1])
             # first duplicate rows
-            num_dup = shape[0] / mat.shape[0]
+            num_dup = int(shape[0] / mat.shape[0])
             for row in range(0, mat.shape[0]):
                 for i in range(0, num_dup):
                     mat_tmp = np.vstack([mat_tmp, mat[row, :].reshape(1, mat.shape[1])])
 
             mat_expanded = np.array([]).reshape(mat_tmp.shape[0], 0)
             # then duplicate cols
-            num_dup = shape[1] / mat.shape[1]
+            num_dup = int(shape[1] / mat.shape[1])
             for col in range(0, mat.shape[1]):
                 for i in range(0, num_dup):
                     mat_expanded = np.hstack([mat_expanded, mat_tmp[:, col].reshape(mat.shape[0], 1)])
@@ -3526,7 +3527,7 @@ class CrossEval:
     # ================================================================================ #
 
     def plot_speed_for_scenario(self, rep, config_id, alg_id, unit='metric', limit=(0, 40),
-                                fig_size=(16, 8), fontsize=(40, 36, 34), grid_res=(5, 50),
+                                fig_size=(16, 8), fontsize=(40, 36, 34), true_grid=(5, 50),
                                 save_fig=False, title=None):
         """
         This function plots the estimated speed profile over the entire time space domain in the specified unit. It will
@@ -3546,7 +3547,7 @@ class CrossEval:
         # read the result from file
         est_speed_file = self.__est_result_dir[rep] + '{0}_{1}_speed.txt'.format(config_id, alg_id)
         true_speed_file = self.__truestate_result_dir[rep] + \
-                          'truestate_{0}s{1}m_speed.txt'.format(self.grid_res[0], self.grid_res[1])
+                          'truestate_{0}s{1}m_speed.txt'.format(true_grid[0], true_grid[1])
 
         est_speed = np.genfromtxt(est_speed_file, delimiter=',')
         est_speed = np.flipud(np.matrix(est_speed).T)
@@ -3581,7 +3582,7 @@ class CrossEval:
             raise Exception('Error: Unrecognized unit for plotting speed.')
 
         # truncate the first 5 mins
-        start_time = int(5 * 60 / grid_res[0])
+        start_time = int(5 * 60 / self.grid_res[0])
 
         fig = plt.figure(figsize=fig_size, dpi=100)
         ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
@@ -3604,6 +3605,7 @@ class CrossEval:
         # set x and y ticks
         x_ticks = np.array([start_time, 360, 720, 1080, 1440, 1800])
         x_ticklabels = 5 * x_ticks / 60  # in min
+        x_ticklabels = [int(i) for i in x_ticklabels]
         x_ticks -= start_time
 
         if self.workzone == 'I80':
@@ -3612,6 +3614,7 @@ class CrossEval:
             y_ticks = np.linspace(0, 128, 5).astype(int)
         # y_ticks = y_ticks[:-1]      # remove the last one
         y_ticklabels = y_ticks[::-1] / 32
+        y_ticklabels = [int(i) for i in y_ticklabels]
 
         ax.set_xticks(x_ticks)
         ax.set_xticklabels(x_ticklabels, fontsize=fontsize[2])
@@ -3835,8 +3838,8 @@ class CrossEval:
         ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
 
         start_time = 60
-        ax.plot(est_queue[start_time:], label='Estimated', linewidth=2)
-        ax.plot(true_queue[start_time:], label='True', linewidth=2)
+        ax.plot(true_queue[start_time:], label='True', linewidth=2, color='b')
+        ax.plot(est_queue[start_time:], label='Estimated', linewidth=2, color='r')
 
         ax.set_ylim(ylim)
         ax.set_xlabel('Time (min)', fontsize=fontsize[1])
@@ -3847,6 +3850,7 @@ class CrossEval:
         # #==============================================================
         x_ticks = np.array([start_time, 360, 720, 1080, 1440, 1800])
         x_ticklabels = 5 * x_ticks / 60  # in min
+        x_ticklabels = [int(i) for i in x_ticklabels]
         x_ticks = x_ticks - start_time
         ax.set_xlim([x_ticks[0], x_ticks[-1]])
         ax.set_xticks(x_ticks)
@@ -3900,11 +3904,11 @@ class CrossEval:
         # smooth the true states
         window_width = 6
         smoothed_true_traveltime = deepcopy(true_traveltime)
-        for i in range(0, len(true_traveltime)):
-            if i < window_width:
-                smoothed_true_traveltime[i] = np.mean(true_traveltime[0:i + 1])
-            else:
-                smoothed_true_traveltime[i] = np.mean(true_traveltime[i - window_width + 1:i + 1])
+        # for i in range(0, len(true_traveltime)):
+        #     if i < window_width:
+        #         smoothed_true_traveltime[i] = np.mean(true_traveltime[0:i + 1])
+        #     else:
+        #         smoothed_true_traveltime[i] = np.mean(true_traveltime[i - window_width + 1:i + 1])
 
         # #==============================================================
         # visualization
@@ -3912,13 +3916,14 @@ class CrossEval:
         ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
 
         start_time = 60
-        ax.plot(est_traveltime[start_time:] / 60.0, label='Estimated', linewidth=2)
-        ax.plot(smoothed_true_traveltime[start_time:] / 60.0, label='True', linewidth=2)
+        ax.plot(smoothed_true_traveltime[start_time:] / 60.0, label='True', linewidth=2, color='b')
+        ax.plot(est_traveltime[start_time:] / 60.0, label='Estimated', linewidth=2, color='r')
 
         # set the x ticks
         # #==============================================================
         x_ticks = np.array([start_time, 360, 720, 1080, 1440, 1800])
         x_ticklabels = 5 * x_ticks / 60  # in min
+        x_ticklabels = [int(i) for i in x_ticklabels]
         x_ticks -= start_time
 
         ax.set_xlabel('Time (min)', fontsize=fontsize[1])

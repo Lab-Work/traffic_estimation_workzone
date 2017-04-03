@@ -160,8 +160,8 @@ if True:
     # ================================================
     # the complete set of algorithms to evaluate
     # algorithms = ['linearFILL', 'fisb', 'enkfANupdated']
-    # algorithms = ['linearFILL', 'fisb']
-    algorithms = ['enkfANupdated']
+    algorithms = ['linearFILL', 'fisb']
+    # algorithms = ['enkfANupdated']
 
     # ================================================
     # The complete set of num_sensors to generate
@@ -171,8 +171,8 @@ if True:
     # the complete set of types of sensors to generate
     # sensor_types = ['IDEAL', 'RADAR', 'RADARx2', 'RADARx4', 'RADARx8',
     #                 'RTMS', 'RTMSx2', 'RTMSx4', 'RTMSx8', 'ICONE', 'ICONEx2']
-    sensor_types = ['IDEAL', 'RADAR', 'RADARx2', 'RADARx4', 'RADARx8',
-                    'ICONE', 'ICONEx2']
+    sensor_types = ['RADAR', 'RADARx2', 'RADARx4', 'RADARx8',
+                    'RTMS', 'RTMSx2', 'RTMSx4', 'RTMSx8', 'ICONE', 'ICONEx2']
 
     # ================================================
     # Generate the configuration file

@@ -21,7 +21,7 @@ data_dir = '/data_fast/Yanning_workzone/'
 config_file = '/data_fast/Yanning_workzone/I80_configurations_input.txt'
 
 # replication ids
-replications = [41368]
+replications = [41368, 41369, 41370, 41371, 41372, 41373, 41374, 41375, 41376, 41377]
 
 # the estimation grid, (5,50) for linearFILL and fisb, (5,200) for enkf
 estimation_grid = (5, 50)
@@ -141,7 +141,7 @@ if False:
     replications_to_compute = [41372]
     for rep in replications_to_compute:
         for grid in grids:
-            cross_eval.compute_true_queue_for_grid(rep,grid,v_threshold)
+            cross_eval.compute_true_queue_for_grid(rep, grid, v_threshold)
             cross_eval.compute_trueinst_traveltime_for_grid(rep, grid, max_speed=27.2,
                                                             min_speed=1.34)
 
@@ -157,23 +157,23 @@ if False:
     for grid in grids:
         if plot_speed:
             cross_eval.plot_true_speed_for_rep(grid, replications_to_plot[0], unit='imperial',
-                                               limit=[0, 80], save_fig=save_fig, fig_size=(22, 8),
+                                               limit=[0, 80], save_fig=save_fig, fig_size=(12,12),
                                                fontsize=[50, 46, 42],
-                                               title='I-80 True velocity field (mph)')
+                                               title='True velocity field (mph)')
         # # cross_eval.plot_true_density_for_rep(grid, replications[0], unit='imperial', limit=[0,1000])
         # # cross_eval.plot_true_speed_field_partition(grid, replications[0], unit='imperial', limit=[0,80],
         # #                                           queue_buffer=800,save_fig=False,title='True speed 5s50m (mph)')
         if plot_queue:
             cross_eval.plot_true_queue_for_rep(grid, replications_to_plot[0], unit='imperial',
-                                               fig_size=(22, 8), title='I-80 True queue length',
+                                               fig_size=(12, 12), title='True queue length',
                                                fontsize=[50, 46, 42],
                                                limit=[0, 5], save_fig=save_fig)
         if plot_tt:
             cross_eval.plot_true_traveltime_for_rep(grid, replications_to_plot[0],
-                                                    unit='metric', limit=[0, 8300],
-                                                    title='I-80 True travel time',
+                                                    unit='imperial', limit=[0, 8300],
+                                                    title='True travel time',
                                                     fontsize=[50, 46, 42],
-                                                    fig_size=(22, 8), save_fig=save_fig)
+                                                    fig_size=(12, 12), save_fig=save_fig)
             # cross_eval.plot_measured_traveltime_for_rep(grid, replications[0], unit='metric', limit=[0, 8300])
             #
             # cross_eval.plot_true_speed_density_for_rep(grid, 41236, unit='metric', speed_limit=[0,40], density_limit=[0,0.12])
@@ -186,14 +186,14 @@ if False:
 if False:
     # compute queue for scenarios
     num_sensors = [2, 3, 4, 5, 6, 7, 8, 9, 11, 14, 21, 41]
-    # types_sensors = ['IDEAL', 'RADAR', 'RADARx2', 'RADARx4', 'RADARx8',
+    # types_sensors = ['RADAR', 'RADARx2', 'RADARx4', 'RADARx8',
     #                 'RTMS', 'RTMSx2', 'RTMSx4', 'RTMSx8', 'ICONE', 'ICONEx2']
-    types_sensors = ['ICONE', 'ICONEx2']
+    types_sensors = ['IDEAL']
     # # algs = ['fisb', 'linearFILL', 'enkfANupdated']
     algs = ['enkfANupdated']
     v_threshold = 17.88
     #
-    replications_to_compute = [41368, 41369, 41370, 41371, 41372]
+    replications_to_compute = [41373, 41374, 41375, 41376, 41377]
     # # replications_to_compute = [41368, 41369, 41370]
     # replications_to_compute = [41368, 41369]
 
@@ -231,7 +231,14 @@ if False:
 
     num_sensors = [11]
     types_sensors = ['RTMS']
-    algs = ['enkfANupdated', 'linearFILL', 'fisb']
+
+    # algs = ['enkfANupdated', 'linearFILL', 'fisb']
+    algs = ['enkfANupdated']
+
+    rep = 41368
+
+    print('Plotting results for replication {0}'.format(rep))
+
     alg_labels = {'enkfANupdated': 'Kalman filter', 'linearFILL': 'spatial interpolation',
                   'fisb': 'spatio-temporal filtering'}
     save_fig = True
@@ -240,20 +247,20 @@ if False:
         for ty in types_sensors:
             config_id = 'configHOMO_{0}_{1}'.format(num, ty)
             for alg in algs:
-                cross_eval.plot_speed_for_scenario(41368, config_id, alg,
-                                                   unit='imperial', limit=[0, 80], save_fig=save_fig, grid_res=(5, 50),
-                                                   fig_size=(22, 8), fontsize=[36, 34, 32],
-                                                   title='Velocity estimation using {0} (mph)'.format(alg_labels[alg]))
+                cross_eval.plot_speed_for_scenario(rep, config_id, alg,
+                                                   unit='imperial', limit=[0, 80], save_fig=save_fig, true_grid=(5, 50),
+                                                   fig_size=(11, 11), fontsize=[50, 46, 42],
+                                                   title='Velocity estimation (mph)'.format(alg_labels[alg]))
                 # cross_eval.plot_density_for_scenario( 41368, config_id, alg,
                 #                                       unit='imperial', limit=[0,500], save_fig=save_fig)
-                cross_eval.plot_queue_for_scenario(41368, config_id, alg,
+                cross_eval.plot_queue_for_scenario(rep, config_id, alg,
                                                    unit='imperial', ylim=[0, 5], save_fig=save_fig,
-                                                   true_grid=(5, 50), fig_size=(22, 8), fontsize=[36, 34, 32],
-                                                   title='Queue estimation using {0}'.format(alg_labels[alg]))
-                cross_eval.plot_traveltime_for_scenario(41368, config_id, alg, true_grid=(5, 50),
-                                                        fig_size=(22, 8), fontsize=[36, 34, 32],
-                                                        unit='imperial', ylim=[0, 80], save_fig=save_fig,
-                                                        title='Travel time estimation using {0}'.format(
+                                                   true_grid=(5, 50), fig_size=(11, 11), fontsize=[50, 46, 42],
+                                                   title='Queue estimation'.format(alg_labels[alg]))
+                cross_eval.plot_traveltime_for_scenario(rep, config_id, alg, true_grid=(5, 50),
+                                                        fig_size=(11, 11), fontsize=[50, 46, 42],
+                                                        unit='imperial', ylim=[0, 60], save_fig=save_fig,
+                                                        title='Travel time estimation'.format(
                                                             alg_labels[alg]))
 
                 # cross_eval.plot_speed_est_error_for_scenario( 41368, config_id, alg,
@@ -405,12 +412,12 @@ if False:
 # ============================================
 # # along number of sensors
 if False:
-    plot_speed = False
-    plot_speed_aq = False
+    plot_speed = True
+    plot_speed_aq = True
     plot_queue = True
-    plot_tt = False
+    plot_tt = True
 
-    replications_to_average = [41368, 41369, 41370, 41371, 41372]
+    replications_to_average = [41368, 41369, 41370, 41371, 41372, 41373, 41374, 41375, 41376, 41377]
     compare_grid = (5, 50)
     areas = ['all', 'aroundqueue']
     config_ids = []
@@ -421,7 +428,7 @@ if False:
     norm = 'L1'
     x_axis = 'config'
     xlabel = 'Spacing of sensors (mile)'
-    plot_cost_eff = True
+    plot_cost_eff = False
     save_fig = True
     plot_style = 'line'
     sensor_type = 'RTMS'
@@ -440,7 +447,7 @@ if False:
                                        norm=norm, area='all', queue_buffer=800, ff_speed=27.2,
                                        x_axis=x_axis, xlabel=xlabel, plot_style=plot_style,
                                        xticklabels=spacings, unit='imperial', save_fig=save_fig,
-                                       title='MAE of velocity', ylim=[4, 20], figsize=(22, 10), fontsize=[40, 36, 32],
+                                       title='MAE of velocity', ylim=[4, 20], figsize=(10, 10), fontsize=[40, 36, 32],
                                        plot_cost_eff=plot_cost_eff, cost_eff_num_sensors=num_sensors,
                                        cost_eff_title='Improvement of velocity MAE per sensor',
                                        cost_eff_fontsize=[40, 36, 32],
@@ -466,7 +473,7 @@ if False:
                                        norm=norm, area='aroundqueue', queue_buffer=800, ylim=[5, 30],
                                        x_axis=x_axis, xlabel=xlabel, plot_style=plot_style,
                                        xticklabels=spacings, unit='imperial', save_fig=save_fig,
-                                       title='MAE of velocity around the queue', figsize=(22, 10),
+                                       title='MAE of velocity around the queue', figsize=(10, 10),
                                        fontsize=[40, 36, 32],
                                        plot_cost_eff=plot_cost_eff, cost_eff_num_sensors=num_sensors,
                                        cost_eff_fontsize=[40, 36, 32],
@@ -476,7 +483,7 @@ if False:
         cross_eval.compare_queuelength_error(replications_to_average, config_ids, alg_ids, compare_grid,
                                              norm=norm, x_axis=x_axis, xlabel=xlabel,
                                              xticklabels=spacings, unit='imperial', save_fig=save_fig,
-                                             plot_style=plot_style, ylim=[0, 1], figsize=(22, 10),
+                                             plot_style=plot_style, ylim=[0, 1], figsize=(10, 10),
                                              title='MAE of queue', fontsize=[40, 36, 32],
                                              plot_cost_eff=plot_cost_eff, cost_eff_num_sensors=num_sensors,
                                              cost_eff_fontsize=[40, 36, 32],
@@ -486,7 +493,7 @@ if False:
         cross_eval.compare_traveltime_error(replications_to_average, config_ids, alg_ids, estimation_grid,
                                             norm=norm, x_axis=x_axis, xlabel=xlabel, xticklabels=spacings,
                                             unit='metric', plot_style=plot_style, save_fig=save_fig,
-                                            title='MAE of travel time', ylim=[0, 25], figsize=(22, 10),
+                                            title='MAE of travel time', ylim=[0, 25], figsize=(10, 10),
                                             fontsize=[40, 36, 32],
                                             plot_cost_eff=plot_cost_eff, cost_eff_num_sensors=num_sensors,
                                             cost_eff_title='Improvement of travel time MAE per sensor',
@@ -495,13 +502,13 @@ if False:
 
 # ============================================
 # along types of sensors
-if False:
+if True:
     plot_speed = True
     plot_speed_aq = True
     plot_queue = True
     plot_tt = True
 
-    replications_to_average = [41368, 41369, 41370, 41371, 41372]
+    replications_to_average = [41368, 41369, 41370, 41371, 41372, 41373, 41374, 41375, 41376, 41377]
     # replications_to_average =  [41368, 41369]
     config_ids = []
     types_sensors = ['ICONE', 'RADAR', 'RTMS', 'IDEAL']
@@ -521,7 +528,7 @@ if False:
 
     if plot_speed:
         cross_eval.compare_speed_error(replications_to_average, config_ids, alg_ids, estimation_grid,
-                                       norm=norm, area='all', queue_buffer=800, figsize=(11, 10),
+                                       norm=norm, area='all', queue_buffer=800, figsize=(10, 10),
                                        x_axis=x_axis, xlabel=xlabel, plot_style=plot_style,
                                        xticklabels=xticklabels, unit='imperial', save_fig=save_fig,
                                        plot_cost_eff=plot_cost_eff, cost_eff_num_sensors=num_sensors,
@@ -546,7 +553,7 @@ if False:
     #                                save_fig_name='{0}_{1}_speed_cong.pdf'.format(norm, num_sensors))
     if plot_speed_aq:
         cross_eval.compare_speed_error(replications_to_average, config_ids, alg_ids, estimation_grid,
-                                       norm=norm, area='aroundqueue', queue_buffer=800, figsize=(11, 10),
+                                       norm=norm, area='aroundqueue', queue_buffer=800, figsize=(10, 10),
                                        x_axis=x_axis, xlabel=xlabel, plot_style=plot_style, ff_speed=27.2,
                                        xticklabels=xticklabels, unit='imperial', save_fig=save_fig,
                                        plot_cost_eff=plot_cost_eff, cost_eff_num_sensors=num_sensors,
@@ -555,7 +562,7 @@ if False:
                                        save_fig_name='I80_{0}_{1}_speed_aroundqueue.pdf'.format(norm, num_sensors))
     if plot_queue:
         cross_eval.compare_queuelength_error(replications_to_average, config_ids, alg_ids, estimation_grid,
-                                             norm=norm, x_axis=x_axis, xlabel=xlabel, figsize=(11, 10),
+                                             norm=norm, x_axis=x_axis, xlabel=xlabel, figsize=(10, 10),
                                              xticklabels=xticklabels, unit='imperial', save_fig=save_fig,
                                              plot_cost_eff=plot_cost_eff, cost_eff_num_sensors=num_sensors,
                                              plot_style=plot_style, ylim=[0, 0.5],
@@ -566,7 +573,7 @@ if False:
                                             norm=norm, x_axis=x_axis, xlabel=xlabel, xticklabels=xticklabels,
                                             unit='metric', plot_style=plot_style, save_fig=save_fig,
                                             plot_cost_eff=plot_cost_eff, cost_eff_num_sensors=num_sensors,
-                                            title='MAE of travel time', figsize=(11, 10), fontsize=[40, 36, 36],
+                                            title='MAE of travel time', figsize=(10, 10), fontsize=[40, 36, 36],
                                             save_fig_name='I80_{0}_{1}_tt.pdf'.format(norm, num_sensors))
 
 # ============================================
