@@ -59,7 +59,13 @@ These are the text files containing the network topology which is required for e
 ## 4) Run the code
 
 ### Run autocalibration of AIMSUN
-To be updated.
+The autocalibration has been configured to run automatically by running `./AutoCalibration/*.bat` files. For instance, to run autocalibration of I80 work zone, simply
+- double click `./AutoCalibration/I80_thread1_start_NOMAD.bat`, which will start NOMAD optimization solver and show status in the terminal.
+- double click `./AutoCalibration/I80_thread1_start_simulation.bat`, which will start AIMSUN simulation and show status in the terminal.
+
+AIMSUN supports running two instances of simulation (or more depending on the type of th license). Hence you may use another thread to optimize parameters in parallel by double clicking the bat files `./AutoCalibration/I80_thread2_start_NOMAD.bat` and `./AutoCalibration/I80_thread1_start_simulation.bat`. 
+
+Please refer to the README.md file in the `./AutoCalibration/` folder to learn how to change the optimization parameters. 
 
 ### Run cross evaluation
 Cross evaluation mainly consists of the following steps:
